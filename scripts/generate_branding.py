@@ -1,17 +1,19 @@
-"""Regenerate favicon.ico + capitalpay-logo.png from the CapitalPay logo source.
+"""Regenerate the in-app logo and the browser favicon from brand source PNGs.
 
-Source of truth is ``assets/capitalpay-logo-source.png`` — the brand-provided
-artwork. The source is a (270×247) gradient plate with a white "cp" glyph
-inside; we programmatically:
+Two independent sources, two independent outputs:
 
-1. Detect the glyph bbox via a brightness threshold on the RGB plane.
-2. Expand that bbox to a SQUARE centred on the glyph's geometric centre
-   (keeps the "cp" perfectly centred in the output).
-3. Add a small margin so the glyph has breathing room at favicon sizes.
-4. Resample to the target pixel sizes with LANCZOS.
+* ``assets/capitalpay-logo-source.png``  →  ``assets/capitalpay-logo.png``
+    The CapitalPay "cp" gradient mark used inside the app (login card,
+    sidebar header, etc). Glyph-centred square crop driven by a brightness
+    threshold on the white "cp" letterforms.
 
-This makes small favicons (16/32 px) look crisp and aligned instead of a tiny
-glyph floating in a sea of gradient.
+* ``assets/favicon-source.png``  →  ``assets/favicon.ico``
+    The brand mark intended for the browser tab. Detects the brand
+    silhouette by trimming any uniform background colour around the edges,
+    then makes the result a square so favicons render cleanly at every size.
+
+If ``favicon-source.png`` is missing, the favicon falls back to the same
+``capitalpay-logo-source.png`` pipeline so older repos keep working.
 
 Run:
     python scripts/generate_branding.py
@@ -25,37 +27,34 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-SOURCE = ASSETS / "capitalpay-logo-source.png"
+LOGO_SOURCE = ASSETS / "capitalpay-logo-source.png"
+FAVICON_SOURCE = ASSETS / "favicon-source.png"
 
-# In-app logo size. 256 gives crisp rendering through hero-size usages.
 LOGO_PX = 256
-# Multi-resolution favicon. 16/32/48 cover every browser + Windows shell;
-# 64 future-proofs hi-dpi Chrome tab strips.
 FAVICON_SIZES = [16, 32, 48, 64]
 
-# Brightness threshold used to pick out the white glyph from the gradient.
-# The "cp" mark in the current brand file is pure white; anything 200+ across
-# the RGB plane is glyph.
+# CapitalPay "cp" glyph detection — the mark is pure white on the gradient.
 GLYPH_THRESHOLD = 200
-# Margin around the glyph, as a fraction of the square side. Kept small so the
-# mark dominates the frame at 16/32 px favicons instead of drowning in gradient.
-MARGIN_PCT = 0.06
+GLYPH_MARGIN_PCT = 0.06
+
+# Favicon background-trim tolerance (per-channel, 0–255). Anything within this
+# distance of the corner colour is treated as background and trimmed.
+BG_TOLERANCE = 24
+# Padding added around the trimmed brand mark, expressed as a fraction of the
+# square side. Small so the mark dominates the favicon.
+FAVICON_MARGIN_PCT = 0.04
 
 
-def _load_source() -> Image.Image:
-    if not SOURCE.exists():
+def _load(path: Path) -> Image.Image:
+    if not path.exists():
         raise FileNotFoundError(
-            f"Missing brand source image: {SOURCE.relative_to(ROOT)}. "
-            "Drop the CapitalPay logo PNG there before running this script."
+            f"Missing brand source image: {path.relative_to(ROOT)}."
         )
-    return Image.open(SOURCE).convert("RGBA")
+    return Image.open(path).convert("RGBA")
 
 
 def _square_crop_on_glyph(src: Image.Image) -> Image.Image:
-    """Crop ``src`` to a square centred on the detected glyph.
-
-    Falls back to a plain centre-square if no glyph pixels are detected.
-    """
+    """Crop ``src`` to a square centred on the bright "cp" glyph."""
     arr = np.array(src)
     h, w = arr.shape[:2]
     lum = arr[:, :, :3].mean(axis=2)
@@ -70,52 +69,100 @@ def _square_crop_on_glyph(src: Image.Image) -> Image.Image:
     ys, xs = np.where(mask)
     gx0, gy0 = int(xs.min()), int(ys.min())
     gx1, gy1 = int(xs.max()) + 1, int(ys.max()) + 1
-
-    # Centre of the glyph.
-    cx = (gx0 + gx1) / 2.0
-    cy = (gy0 + gy1) / 2.0
-
-    # Base side: the larger of glyph width/height, grown by MARGIN_PCT.
+    cx, cy = (gx0 + gx1) / 2.0, (gy0 + gy1) / 2.0
     glyph_side = max(gx1 - gx0, gy1 - gy0)
-    side = int(round(glyph_side * (1.0 + 2.0 * MARGIN_PCT)))
-
-    # Don't exceed the source canvas — if we do, shrink to fit.
+    side = int(round(glyph_side * (1.0 + 2.0 * GLYPH_MARGIN_PCT)))
     side = min(side, w, h)
-
     half = side / 2.0
-    left = int(round(cx - half))
-    top = int(round(cy - half))
-
-    # Clamp into the canvas.
-    left = max(0, min(left, w - side))
-    top = max(0, min(top, h - side))
-
+    left = max(0, min(int(round(cx - half)), w - side))
+    top = max(0, min(int(round(cy - half)), h - side))
     return src.crop((left, top, left + side, top + side))
+
+
+def _square_crop_on_brand_mark(src: Image.Image) -> Image.Image:
+    """Trim the uniform background colour, then square-pad the brand mark.
+
+    Designed for the favicon source where the brand sits inside a flat dark
+    (or solid) field. We:
+      1. Sample the four corners to estimate the background colour.
+      2. Mask out pixels within ``BG_TOLERANCE`` of that colour AND alpha 0.
+      3. Compute the bounding box of what remains and centre it on a square
+         transparent canvas with a small margin.
+    """
+    arr = np.array(src).astype(np.int16)
+    h, w = arr.shape[:2]
+
+    # Background colour = median of the four corner pixels (RGB only). Medians
+    # ignore single stray noise pixels in any one corner.
+    corners = np.stack([
+        arr[0, 0, :3], arr[0, w - 1, :3],
+        arr[h - 1, 0, :3], arr[h - 1, w - 1, :3],
+    ])
+    bg_rgb = np.median(corners, axis=0)
+
+    diff = np.abs(arr[:, :, :3] - bg_rgb).max(axis=2)
+    is_bg = diff <= BG_TOLERANCE
+    is_transparent = arr[:, :, 3] == 0
+    mask = ~(is_bg | is_transparent)
+
+    if not mask.any():
+        # Pathological — fall back to a centre square crop.
+        side = min(w, h)
+        left = (w - side) // 2
+        top = (h - side) // 2
+        return src.crop((left, top, left + side, top + side))
+
+    ys, xs = np.where(mask)
+    bx0, by0 = int(xs.min()), int(ys.min())
+    bx1, by1 = int(xs.max()) + 1, int(ys.max()) + 1
+    bw, bh = bx1 - bx0, by1 - by0
+
+    side = int(round(max(bw, bh) * (1.0 + 2.0 * FAVICON_MARGIN_PCT)))
+    canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    crop = src.crop((bx0, by0, bx1, by1))
+    paste_x = (side - bw) // 2
+    paste_y = (side - bh) // 2
+    canvas.paste(crop, (paste_x, paste_y), crop)
+    return canvas
 
 
 def _resample(sq: Image.Image, px: int) -> Image.Image:
     return sq.resize((px, px), Image.LANCZOS)
 
 
-def main() -> None:
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    src = _load_source()
+def _write_logo() -> None:
+    src = _load(LOGO_SOURCE)
     sq = _square_crop_on_glyph(src)
-    print(f"glyph-centred square crop: {sq.size[0]}×{sq.size[1]}")
+    out = ASSETS / "capitalpay-logo.png"
+    _resample(sq, LOGO_PX).save(out, format="PNG", optimize=True)
+    print(f"wrote {out.relative_to(ROOT)} (from {LOGO_SOURCE.name}, crop {sq.size[0]}×{sq.size[1]})")
 
-    logo_path = ASSETS / "capitalpay-logo.png"
-    _resample(sq, LOGO_PX).save(logo_path, format="PNG", optimize=True)
-    print(f"wrote {logo_path.relative_to(ROOT)}")
 
-    ico_path = ASSETS / "favicon.ico"
+def _write_favicon() -> None:
+    if FAVICON_SOURCE.exists():
+        src = _load(FAVICON_SOURCE)
+        sq = _square_crop_on_brand_mark(src)
+        source_label = FAVICON_SOURCE.name
+    else:
+        src = _load(LOGO_SOURCE)
+        sq = _square_crop_on_glyph(src)
+        source_label = LOGO_SOURCE.name
+
+    out = ASSETS / "favicon.ico"
     frames = [_resample(sq, s) for s in FAVICON_SIZES]
     frames[0].save(
-        ico_path,
+        out,
         format="ICO",
         sizes=[(s, s) for s in FAVICON_SIZES],
         append_images=frames[1:],
     )
-    print(f"wrote {ico_path.relative_to(ROOT)}")
+    print(f"wrote {out.relative_to(ROOT)} (from {source_label}, crop {sq.size[0]}×{sq.size[1]})")
+
+
+def main() -> None:
+    ASSETS.mkdir(parents=True, exist_ok=True)
+    _write_logo()
+    _write_favicon()
 
 
 if __name__ == "__main__":
