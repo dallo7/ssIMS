@@ -31,13 +31,17 @@ def _can_write():
 
 
 BIN_COLS = [
-    {"field": "item_code", "headerName": "SKU", "filter": True},
-    {"field": "item_name", "headerName": "Item"},
-    {"field": "warehouse", "headerName": "Warehouse"},
-    {"field": "location", "headerName": "Bin"},
-    {"field": "qty", "headerName": "Qty here", "type": ["numericColumn"]},
-    {"field": "total_on_hand", "headerName": "Total", "type": ["numericColumn"]},
+    {"field": "item_code", "headerName": "SKU", "filter": True, "minWidth": 130},
+    {"field": "item_name", "headerName": "Item", "flex": 1, "minWidth": 200},
+    {"field": "warehouse", "headerName": "Warehouse", "minWidth": 140},
+    {"field": "location", "headerName": "Bin", "minWidth": 120},
+    {"field": "qty", "headerName": "Qty here", "type": ["numericColumn"], "minWidth": 110},
+    {"field": "total_on_hand", "headerName": "Total", "type": ["numericColumn"], "minWidth": 110},
 ]
+
+
+def _section_label(text: str) -> dmc.Text:
+    return dmc.Text(text, fw=600, size="sm", tt="uppercase", c="dimmed")
 
 
 layout = dmc.Stack(
@@ -54,43 +58,86 @@ layout = dmc.Stack(
                 dmc.Card(
                     withBorder=True,
                     padding="lg",
-                    children=[
-                        dmc.Text("New storage location", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                        dmc.TextInput(id="loc-name", label="Bin / aisle name"),
-                        dmc.TextInput(id="loc-wh", label="Warehouse", value="Main"),
-                        dmc.TextInput(id="loc-zone", label="Zone (optional)"),
-                        dmc.Button("Create location", id="loc-create", color="cpi", mt="sm"),
-                    ],
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("New storage location"),
+                            dmc.TextInput(id="loc-name", label="Bin name", placeholder="e.g. A-01"),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 2},
+                                spacing="sm",
+                                children=[
+                                    dmc.TextInput(id="loc-wh", label="Warehouse", value="Main"),
+                                    dmc.TextInput(id="loc-zone", label="Zone", placeholder="Optional"),
+                                ],
+                            ),
+                            dmc.Button("Create location", id="loc-create", color="cpi", fullWidth=True),
+                        ],
+                    ),
                 ),
                 dmc.Card(
                     withBorder=True,
                     padding="lg",
-                    children=[
-                        dmc.Text("Transfer between bins", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                        dmc.Text(
-                            "Moves quantity between bins without changing system-wide on-hand (FIFO layers unchanged).",
-                            size="xs",
-                            c="dimmed",
-                            mb="sm",
-                        ),
-                        dmc.Select(id="loc-tr-item", label="Item", data=[]),
-                        dmc.Select(id="loc-tr-from", label="From", data=[]),
-                        dmc.Select(id="loc-tr-to", label="To", data=[]),
-                        dmc.NumberInput(id="loc-tr-qty", label="Quantity", min=0, value=0),
-                        dmc.TextInput(id="loc-tr-ref", label="Reference (optional)"),
-                        dmc.Button("Transfer", id="loc-tr-btn", color="blue", mt="sm"),
-                    ],
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("Transfer between bins"),
+                            dmc.Select(
+                                id="loc-tr-item",
+                                label="Item",
+                                data=[],
+                                searchable=True,
+                                clearable=True,
+                                nothingFoundMessage="No items",
+                                placeholder="Search items…",
+                            ),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 2},
+                                spacing="sm",
+                                children=[
+                                    dmc.Select(id="loc-tr-from", label="From", data=[], searchable=True),
+                                    dmc.Select(id="loc-tr-to", label="To", data=[], searchable=True),
+                                ],
+                            ),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 2},
+                                spacing="sm",
+                                children=[
+                                    dmc.NumberInput(id="loc-tr-qty", label="Quantity", min=0, value=0),
+                                    dmc.TextInput(id="loc-tr-ref", label="Reference", placeholder="Optional"),
+                                ],
+                            ),
+                            dmc.Button("Transfer", id="loc-tr-btn", color="blue", fullWidth=True),
+                        ],
+                    ),
                 ),
             ],
         ),
         dmc.Text(id="loc-msg", size="sm"),
-        AgGrid(
-            id="loc-grid",
-            columnDefs=BIN_COLS,
-            rowData=[],
-            dashGridOptions={"pagination": True, "paginationPageSize": 20},
-            style={"height": "520px", "width": "100%"},
-            className="ag-theme-alpine",
+        dmc.Card(
+            withBorder=True,
+            padding="md",
+            children=dmc.Stack(
+                gap="sm",
+                children=[
+                    dmc.Group(
+                        [
+                            _section_label("Bin stock"),
+                            dmc.Text(id="loc-grid-count", size="xs", c="dimmed"),
+                        ],
+                        justify="space-between",
+                    ),
+                    AgGrid(
+                        id="loc-grid",
+                        columnDefs=BIN_COLS,
+                        rowData=[],
+                        defaultColDef={"resizable": True, "sortable": True, "filter": True},
+                        dashGridOptions={"pagination": True, "paginationPageSize": 20, "domLayout": "normal"},
+                        style={"height": "520px", "width": "100%"},
+                        className="ag-theme-alpine",
+                    ),
+                ],
+            ),
         ),
     ],
 )
@@ -111,6 +158,7 @@ def loc_header(pathname, loc):
 
 @callback(
     Output("loc-grid", "rowData"),
+    Output("loc-grid-count", "children"),
     Output("loc-tr-item", "data"),
     Output("loc-tr-from", "data"),
     Output("loc-tr-to", "data"),
@@ -129,7 +177,8 @@ def loc_load(pathname, _v):
         loc_opts = [
             {"label": f"{x.warehouse} / {x.name}", "value": str(x.id)} for x in list_storage_locations(s)
         ]
-    return rows, item_opts, loc_opts, loc_opts
+    count_label = f"{len(rows):,} row(s)"
+    return rows, count_label, item_opts, loc_opts, loc_opts
 
 
 @callback(

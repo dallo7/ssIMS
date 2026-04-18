@@ -25,6 +25,10 @@ def _can_write():
     return session.get("role") in ("ADMIN", "MANAGER", "STOCK_CLERK")
 
 
+def _section_label(text: str) -> dmc.Text:
+    return dmc.Text(text, fw=600, size="sm", tt="uppercase", c="dimmed")
+
+
 layout = dmc.Stack(
     className="cpi-page-wrap",
     style={"width": "100%", "maxWidth": "100%", "boxSizing": "border-box"},
@@ -32,44 +36,83 @@ layout = dmc.Stack(
     children=[
         dcc.Store(id="kit-version", data=0),
         html.Div(id="kits-bom-page-header", children=page_header(_kit_t, help=_kit_h)),
-        dmc.Card(
-            withBorder=True,
-            padding="lg",
+        dmc.SimpleGrid(
+            cols={"base": 1, "md": 2},
+            spacing="lg",
             children=[
-                dmc.Text("Bill of materials", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                dmc.Select(id="kit-parent", label="Parent (finished) SKU", data=[]),
-                dmc.SimpleGrid(
-                    cols={"base": 1, "sm": 2},
-                    mt="md",
-                    children=[
-                        dmc.TextInput(id="kit-comp", label="Component item ID (pk)"),
-                        dmc.NumberInput(id="kit-per", label="Qty per 1 parent", min=0, value=1, decimalScale=4),
-                    ],
+                dmc.Card(
+                    withBorder=True,
+                    padding="lg",
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("Bill of materials"),
+                            dmc.Select(
+                                id="kit-parent",
+                                label="Finished product",
+                                data=[],
+                                searchable=True,
+                                clearable=True,
+                                nothingFoundMessage="No items",
+                                placeholder="Select the product to define…",
+                            ),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 2},
+                                spacing="sm",
+                                children=[
+                                    dmc.Select(
+                                        id="kit-comp",
+                                        label="Component",
+                                        data=[],
+                                        searchable=True,
+                                        clearable=True,
+                                        nothingFoundMessage="No items",
+                                        placeholder="Search components…",
+                                    ),
+                                    dmc.NumberInput(
+                                        id="kit-per",
+                                        label="Qty per parent",
+                                        min=0,
+                                        value=1,
+                                        decimalScale=4,
+                                    ),
+                                ],
+                            ),
+                            dmc.Group(
+                                [
+                                    dmc.Button("Save component", id="kit-save-bom", color="cpi", style={"flex": 1}),
+                                    dmc.Button("Refresh", id="kit-refresh", variant="light"),
+                                ],
+                                gap="sm",
+                                wrap="nowrap",
+                            ),
+                        ],
+                    ),
                 ),
-                dmc.Group(
-                    [
-                        dmc.Button("Save BOM line", id="kit-save-bom", color="cpi"),
-                        dmc.Button("Refresh table", id="kit-refresh", variant="light"),
-                    ],
-                    mt="sm",
-                    gap="sm",
+                dmc.Card(
+                    withBorder=True,
+                    padding="lg",
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("Assemble kits"),
+                            dmc.NumberInput(
+                                id="kit-build-qty",
+                                label="Quantity to build",
+                                min=0,
+                                value=0,
+                            ),
+                            dmc.Select(
+                                id="kit-build-loc",
+                                label="Receive into location",
+                                data=[],
+                                clearable=True,
+                                placeholder="Optional",
+                            ),
+                            dmc.Button("Assemble", id="kit-assemble", color="green", fullWidth=True),
+                        ],
+                    ),
                 ),
-            ],
-        ),
-        dmc.Card(
-            withBorder=True,
-            padding="lg",
-            children=[
-                dmc.Text("Assemble kits", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                dmc.Text(
-                    "Consumes components (FIFO) and receives finished goods at rolled-up cost.",
-                    size="xs",
-                    c="dimmed",
-                    mb="sm",
-                ),
-                dmc.NumberInput(id="kit-build-qty", label="How many parents to build", min=0, value=0),
-                dmc.Select(id="kit-build-loc", label="Location (optional)", data=[], clearable=True),
-                dmc.Button("Assemble", id="kit-assemble", color="green", mt="sm"),
             ],
         ),
         dmc.Text(id="kit-msg", size="sm"),
@@ -91,8 +134,20 @@ def kit_header(pathname, loc):
     return page_header(t, help=h)
 
 
+_NUM_CELL = {"textAlign": "right", "fontVariantNumeric": "tabular-nums", "whiteSpace": "nowrap"}
+
+
+def _fmt_qty(v) -> str:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return ""
+    return f"{int(f):,}" if f.is_integer() else f"{f:,.4f}".rstrip("0").rstrip(".")
+
+
 @callback(
     Output("kit-parent", "data"),
+    Output("kit-comp", "data"),
     Output("kit-build-loc", "data"),
     Input("_pages_location", "pathname"),
     Input("kit-version", "data"),
@@ -107,7 +162,7 @@ def kit_opts(pathname, _v):
             {"label": f"{x.warehouse} / {x.name}", "value": str(x.id)}
             for x in s.scalars(select(models.StorageLocation).order_by(models.StorageLocation.name)).all()
         ]
-    return opts, locs
+    return opts, opts, locs
 
 
 @callback(
@@ -117,42 +172,92 @@ def kit_opts(pathname, _v):
     Input("kit-refresh", "n_clicks"),
 )
 def kit_bom_table(parent_id, _v, _r):
+    empty_card = dmc.Card(
+        withBorder=True,
+        padding="md",
+        children=dmc.Stack(
+            gap="sm",
+            children=[
+                _section_label("Components"),
+                dmc.Text(
+                    "Pick a finished product above to view or edit its components.",
+                    c="dimmed",
+                    size="sm",
+                ),
+            ],
+        ),
+    )
     if not parent_id:
-        return dmc.Text("Select a parent SKU.", c="dimmed", size="sm")
+        return empty_card
     with db_session() as s:
         lines = list_bom_lines(s, int(parent_id))
         items = {i.id: i.name for i in list_items(s, active_only=False)}
-    if not lines:
-        return dmc.Text("No BOM lines yet.", c="dimmed", size="sm")
     head = html.Tr(
         [
-            html.Th("Line id"),
+            html.Th("#", style=_NUM_CELL),
             html.Th("Component"),
-            html.Th("Qty / parent"),
+            html.Th("Qty per parent", style=_NUM_CELL),
             html.Th(""),
         ]
     )
-    body = []
-    for ln in lines:
-        body.append(
-            html.Tr(
-                [
-                    html.Td(str(ln.id)),
-                    html.Td(items.get(ln.component_item_id, str(ln.component_item_id))),
-                    html.Td(str(ln.quantity_per)),
+    if not lines:
+        body = html.Tbody(
+            [
+                html.Tr(
                     html.Td(
-                        dmc.Button(
-                            "Delete",
-                            size="xs",
-                            color="red",
-                            variant="light",
-                            id={"type": "kit-del", "lid": ln.id},
-                        )
-                    ),
-                ]
-            )
+                        dmc.Text("No components yet — add one above.", size="sm", c="dimmed", ta="center"),
+                        colSpan=4,
+                        style={"padding": "1rem"},
+                    )
+                )
+            ]
         )
-    return dmc.Table(striped=True, highlightOnHover=True, withTableBorder=True, children=[html.Thead(head), html.Tbody(body)])
+    else:
+        rows = []
+        for ln in lines:
+            rows.append(
+                html.Tr(
+                    [
+                        html.Td(str(ln.id), style=_NUM_CELL),
+                        html.Td(items.get(ln.component_item_id, str(ln.component_item_id))),
+                        html.Td(_fmt_qty(ln.quantity_per), style=_NUM_CELL),
+                        html.Td(
+                            dmc.Button(
+                                "Remove",
+                                size="xs",
+                                color="red",
+                                variant="light",
+                                id={"type": "kit-del", "lid": ln.id},
+                            ),
+                            style={"textAlign": "right"},
+                        ),
+                    ]
+                )
+            )
+        body = html.Tbody(rows)
+    tbl = dmc.Table(
+        striped=True,
+        highlightOnHover=True,
+        withTableBorder=True,
+        children=[html.Thead(head), body],
+    )
+    return dmc.Card(
+        withBorder=True,
+        padding="md",
+        children=dmc.Stack(
+            gap="sm",
+            children=[
+                dmc.Group(
+                    [
+                        _section_label("Components"),
+                        dmc.Text(f"{len(lines)} component(s)", size="xs", c="dimmed"),
+                    ],
+                    justify="space-between",
+                ),
+                tbl,
+            ],
+        ),
+    )
 
 
 @callback(

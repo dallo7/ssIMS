@@ -532,19 +532,19 @@ _PAGE_HEADERS: dict[str, dict[str, dict[str, str]]] = {
     "locations": {
         "title": {"en": "Locations & bin stock", "ar": "المواقع والمخزون حسب الرف", "juba": "الأماكن والكمية في الرف", "din": "Locations & bin stock"},
         "help": {
-            "en": "Per-bin quantities, new warehouses or aisles, and bin-to-bin transfers (on-hand total unchanged).",
-            "ar": "كميات لكل رف، مستودعات جديدة، ونقل بين الرفوف دون تغيير إجمالي الكمية.",
-            "juba": "كمية في كل رف، مستودع جديد، ونقل بين الرفوف من غير ما تغيّر المجموع.",
-            "din": "Per-bin quantities, new warehouses or aisles, and bin-to-bin transfers (on-hand total unchanged).",
+            "en": "Manage warehouses and bins, and move stock from one bin to another.",
+            "ar": "إدارة المستودعات والرفوف ونقل المخزون من رف إلى آخر.",
+            "juba": "نظّم المستودعات والرفوف، وحرّك البضاعة من رف لرف.",
+            "din": "Manage warehouses and bins, and move stock from one bin to another.",
         },
     },
     "kits_bom": {
         "title": {"en": "Kits & bill of materials", "ar": "المجموعات وقائمة المواد", "juba": "الكِتات وقايمة المكوّنات", "din": "Kits & bill of materials"},
         "help": {
-            "en": "Define components per finished SKU, then assemble: consumes components (FIFO) and receives parents at rolled-up cost.",
-            "ar": "حدد المكوّنات لكل صنف نهائي، ثم التجميع: يستهلك المكوّنات ويستلم الناتج بالتكلفة المجمعة.",
-            "juba": "حدد المكوّنات للصنف الجاهز، بعدين التجميع يستهلك المكوّنات ويدخل الناتج بالتكلفة.",
-            "din": "Define components per finished SKU, then assemble: consumes components (FIFO) and receives parents at rolled-up cost.",
+            "en": "Set the components that make up each finished product, then assemble to build it from stock.",
+            "ar": "حدد المكوّنات التي يتألف منها كل منتج نهائي، ثم قم بالتجميع لإنتاجه من المخزون.",
+            "juba": "حدد المكوّنات للمنتج الجاهز، بعدين اعمل التجميع علشان تكوّنه من المخزون.",
+            "din": "Set the components that make up each finished product, then assemble to build it from stock.",
         },
     },
 }

@@ -503,7 +503,7 @@ def rep_analytics_bundle(pathname, theme_data, hist_days, fc_horizon, whatif):
 
     health_children = [
         _kpi_card("Active SKUs", f"{n_skus:,}", "Catalogue breadth"),
-        _kpi_card("Inventory value (cost)", f"SSP {stock_value:,.0f}", "On-hand × unit cost"),
+        _kpi_card("Inventory value (cost)", f"SSP {stock_value:,.0f}", "Stock quantity × unit cost"),
         _kpi_card("Low-stock SKUs", f"{low:,}", "Below reorder point"),
         _kpi_card("Out-of-stock SKUs", f"{oos:,}", "Qty ≤ 0"),
         _kpi_card("Issued (30d)", f"{mov30['issued']:,.1f} u", f"Net {mov['net']:+.1f} u over {days}d"),
