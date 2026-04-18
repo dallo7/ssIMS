@@ -14,7 +14,7 @@ import dash_mantine_components as dmc
 from dash import dcc, html, register_page
 from dash_iconify import DashIconify
 
-from components.branding import capital_pay_logo, powered_by_capitalpay
+from components.branding import capital_pay_logo
 from utils.app_text import primary_app_name
 
 register_page(
@@ -337,7 +337,6 @@ def _footer() -> html.Div:
                 align="center",
                 wrap="wrap",
                 children=[
-                    powered_by_capitalpay("en", logo_h=22, text_size="sm"),
                     dmc.Text(
                         "© CapitalPay. All rights reserved.",
                         className="cpi-landing-footer-copy",
