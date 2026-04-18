@@ -87,6 +87,31 @@ server.secret_key = os.environ.get("CPI_SECRET_KEY", "dev-cpi-inventory-change-m
 server.register_blueprint(cpi_api_v1_bp, url_prefix="/api/v1")
 apply_flask_server_settings(server)
 
+
+# Server-side logout. A real HTTP route (not a Dash callback) so the browser
+# performs a full navigation, the response sets Clear-Site-Data + drops the
+# session cookie, and the back button can no longer reveal the prior view.
+@server.route("/logout", methods=["GET", "POST"])
+def server_logout():
+    from flask import make_response, redirect as flask_redirect, session as flask_session
+
+    flask_session.clear()
+    resp = make_response(flask_redirect("/login", code=302))
+    cookie_name = server.config.get("SESSION_COOKIE_NAME", "session")
+    # Best-effort cookie deletion — covers both the Flask default cookie name
+    # and any alternative configured via SESSION_COOKIE_NAME.
+    resp.delete_cookie(cookie_name, path="/")
+    resp.delete_cookie("session", path="/")
+    # Tell the browser to discard cached page bodies and any client storage
+    # tied to this origin. We deliberately leave 'cookies' off the list here:
+    # Flask has already deleted the session cookie, and clearing all cookies
+    # would also drop the user's saved language / theme preferences.
+    resp.headers["Clear-Site-Data"] = '"cache", "storage"'
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
 _poll_raw = (os.environ.get("CPI_ALERT_POLL_MS") or "").strip()
 try:
     _alert_poll_ms = int(_poll_raw) if _poll_raw else (120_000 if is_production_env() else 60_000)
@@ -419,8 +444,12 @@ def toggle_theme(_n, data):
     prevent_initial_call=True,
 )
 def logout_cb(_n):
+    """Hand off to the /logout Flask route so the server can clear the cookie,
+    emit Clear-Site-Data, and the browser performs a real navigation that
+    cannot be served from bfcache. We also clear the session here as a belt
+    in case the route handler is short-circuited by middleware."""
     session.clear()
-    return dcc.Location(pathname="/login", id="lo-loc", refresh=True)
+    return dcc.Location(href="/logout", id="lo-loc", refresh=True)
 
 
 @callback(
