@@ -96,7 +96,9 @@ def server_logout():
     from flask import make_response, redirect as flask_redirect, session as flask_session
 
     flask_session.clear()
-    resp = make_response(flask_redirect("/login", code=302))
+    # Land on the public landing page after logout so the user sees the
+    # marketing copy first and can choose to sign in again from there.
+    resp = make_response(flask_redirect("/welcome", code=302))
     cookie_name = server.config.get("SESSION_COOKIE_NAME", "session")
     # Best-effort cookie deletion — covers both the Flask default cookie name
     # and any alternative configured via SESSION_COOKIE_NAME.
@@ -156,7 +158,11 @@ app.layout = html.Div(
                         dmc.GridCol(
                             id="sidebar-col",
                             span={"base": 12, "sm": 3, "md": 2},
-                            style={"padding": 0},
+                            # Hidden in initial HTML so the first paint of /login
+                            # and /welcome never shows the authenticated chrome.
+                            # `layout_responsive` reveals this column on protected
+                            # paths once the auth callback confirms a session.
+                            style={"padding": 0, "display": "none"},
                             children=html.Div(id="sidebar-inner"),
                         ),
                         dmc.GridCol(
@@ -185,9 +191,15 @@ app.layout = html.Div(
                                         py="sm",
                                         radius=0,
                                         withBorder=False,
+                                        # Hidden in initial HTML — the
+                                        # `header_visibility` callback reveals
+                                        # this on protected paths only. This
+                                        # eliminates the brief flash of the
+                                        # logged-in header on /login and /welcome.
                                         style={
                                             "borderBottom": "1px solid var(--cpi-chrome-border, var(--mantine-color-gray-3))",
                                             "flexShrink": 0,
+                                            "display": "none",
                                         },
                                         children=dmc.Group(
                                             [
@@ -298,9 +310,17 @@ app.layout = html.Div(
 )
 def auth_guard(pathname: str | None):
     p = normalize_path(pathname)
-    # Public, unauthenticated routes. /welcome is the marketing landing page;
-    # /login is the credential entry point. All other paths require a session.
-    if p in ("/login", "/welcome"):
+    # /welcome is always public (marketing landing). /login is public for
+    # unauthenticated visitors; an already-logged-in user that lands on /login
+    # (e.g. via Back button after their session restored) is forwarded to the
+    # dashboard so the chrome doesn't briefly disappear/reappear.
+    if p == "/welcome":
+        return dash.no_update
+    if p == "/login":
+        if session.get("user_id"):
+            prune_invalid_session()
+            if session.get("user_id"):
+                return dcc.Location(pathname="/", id="auth-loc", refresh=True)
         return dash.no_update
     if not session.get("user_id"):
         return dcc.Location(pathname="/welcome", id="auth-loc", refresh=True)
@@ -366,7 +386,9 @@ def apply_theme(theme_data: dict | None, locale_data: dict | None):
 )
 def layout_responsive(pathname: str | None):
     pathname = pathname or ""
-    if "/login" in pathname or "/welcome" in pathname:
+    # Sidebar is hidden by default in the initial HTML; reveal it only once
+    # we know the user is authenticated AND on a chrome-bearing page.
+    if "/login" in pathname or "/welcome" in pathname or not session.get("user_id"):
         return {"display": "none"}, {"base": 12, "sm": 12, "md": 12}
     return {"display": "block", "padding": 0}, {"base": 12, "sm": 9, "md": 10}
 
@@ -394,8 +416,16 @@ def chrome_sidebar(pathname: str | None, alert_n: int | None, loc: dict | None):
 )
 def header_visibility(pathname: str | None, _theme):
     pathname = pathname or ""
-    base = {"borderBottom": "1px solid var(--cpi-chrome-border, var(--mantine-color-gray-3))"}
+    base = {
+        "borderBottom": "1px solid var(--cpi-chrome-border, var(--mantine-color-gray-3))",
+        "flexShrink": 0,
+    }
+    # Public pages keep the chrome hidden, matching the initial-HTML default.
+    # Anything else only reveals the header once we know the user is logged in;
+    # the auth_guard callback will redirect non-authenticated requests away.
     if "/login" in pathname or "/welcome" in pathname:
+        return {**base, "display": "none"}
+    if not session.get("user_id"):
         return {**base, "display": "none"}
     return {**base, "display": "block"}
 

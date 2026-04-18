@@ -113,12 +113,13 @@ def _install_no_cache_headers(flask_server) -> None:
 
 
 def _install_session_redirect(flask_server) -> None:
-    """Redirect unauthenticated HTML page-loads to /login *before* Dash boots.
+    """Redirect unauthenticated HTML page-loads to /welcome *before* Dash boots.
 
-    This catches direct navigations and Back-button restorations that previously
-    let the browser repaint a stale logged-in view. AJAX/JSON callbacks are left
-    alone — Dash's own auth-guard callback handles those — to preserve the SPA's
-    client-side behaviour.
+    Unauthenticated visitors land on the marketing landing page first, where
+    they can choose to sign in. This catches direct navigations and Back-button
+    restorations that previously let the browser repaint a stale logged-in
+    view. AJAX/JSON callbacks are left alone — Dash's own auth-guard callback
+    handles those — to preserve the SPA's client-side behaviour.
     """
     from flask import redirect, request, session
 
@@ -137,7 +138,7 @@ def _install_session_redirect(flask_server) -> None:
             return None
         if session.get("user_id"):
             return None
-        return redirect("/login")
+        return redirect("/welcome")
 
 
 def _install_graceful_shutdown() -> None:
