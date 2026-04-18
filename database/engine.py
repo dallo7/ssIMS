@@ -196,7 +196,15 @@ def get_engine():
                     cur.execute("PRAGMA busy_timeout=30000")
                     cur.close()
             except Exception:
-                pass
+                import logging
+
+                # PRAGMAs are best-effort: without them SQLite still works, just
+                # with less concurrency. Log so operators can diagnose.
+                logging.getLogger(__name__).warning(
+                    "Could not install SQLite PRAGMA event listener; "
+                    "continuing with SQLAlchemy defaults.",
+                    exc_info=True,
+                )
         else:
             try:
                 import psycopg  # noqa: F401 — driver for postgresql+psycopg:// URLs

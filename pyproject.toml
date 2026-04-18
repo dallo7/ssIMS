@@ -1,0 +1,49 @@
+[project]
+name = "capital-pay-inventory"
+version = "1.0.0"
+description = "CapitalPay — inventory, movements, purchase orders, approvals, and reporting (Dash + Flask + FastAPI)."
+requires-python = ">=3.10"
+readme = "README.md"
+
+# Runtime deps are managed in requirements.txt for deterministic, pinned installs
+# (Docker / gunicorn / PaaS). This [project] block only documents metadata so
+# `pip install .` works in tooling that expects PEP 621 projects.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.6.0",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff — lint only (no formatting), keeps the diff minimal on first run.
+# Pairs with the CI job in .github/workflows/ci.yml.
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = [
+  "assets",
+  "data",
+  "deploy",
+  "database/ss.sql",
+  "__pycache__",
+]
+
+[tool.ruff.lint]
+# Baseline ruleset focused on REAL bugs (pyflakes + runtime-breaking pycodestyle
+# errors). Cosmetic/modernisation rules (I, UP, C4, B-cosmetic) are intentionally
+# left OFF so CI passes on the current codebase without mass-rewrites; turn them
+# on incrementally as you tidy modules.
+select = [
+  "F",     # pyflakes (unused imports, undefined names, etc.)
+  "E9",    # IndentationError / SyntaxError-class pycodestyle
+  "W6",    # deprecated syntax (invalid-escape-sequence, etc.)
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Dash pages legitimately set side-effecting module-level `layout = ...`.
+"pages/*.py" = ["E402"]
+"app.py" = ["E402"]
+"asgi.py" = ["E402"]

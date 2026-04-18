@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from database import models
-from database.engine import db_session, init_database
+from database.engine import db_session
 from utils.auth import hash_password
 from utils.fifo import consume_fifo
 from utils.server_config import is_production_env
@@ -296,7 +296,9 @@ def _seed_demo_dataset(session: Session) -> None:
 
 
 def seed_if_empty():
-    init_database()
+    # Schema initialization is the caller's responsibility — `app.py` invokes
+    # `init_database()` on boot immediately before this function, so repeating
+    # the reflection + CREATE-IF-NOT-EXISTS pass here is pure waste.
     mode = _seed_mode()
     with db_session() as session:
         if _is_minimal_mode(mode):

@@ -155,6 +155,48 @@ set CPI_USE_UVICORN=1
 python app.py
 ```
 
+### Production readiness checklist
+
+Run through this list before putting the app in front of real users. Everything here is enforced by code or infrastructure — nothing requires remembering on every deploy.
+
+- [ ] `CPI_ENV=production` is set on the runtime.
+- [ ] `CPI_SECRET_KEY` is set to ≥ 16 random characters (`python -c "import secrets; print(secrets.token_hex(32))"`). Boot fails loudly otherwise — see `utils/server_config.py::validate_production_secret`.
+- [ ] TLS is terminated in front of the app, with `CPI_BEHIND_PROXY=1` and `CPI_SESSION_COOKIE_SECURE=1` exported. Session cookies will be `Secure; HttpOnly; SameSite=Lax`.
+- [ ] Optional but recommended once you are fully HTTPS: `CPI_HSTS_INCLUDE_SUBDOMAINS=1`. The app sends a conservative `Strict-Transport-Security` (1 year) automatically whenever `CPI_SESSION_COOKIE_SECURE=1`.
+- [ ] PostgreSQL is reachable — not the SQLite fallback — for anything multi-worker or beyond a single small box. Set `CPI_DATABASE_URL` (or discrete `CPI_PG_*`) with `sslmode=require`. Verify with `python -m database.check_tcp`.
+- [ ] First admin account bootstrapped (`python -m database.create_bootstrap_admin` or one-shot `CPI_BOOTSTRAP_ADMIN_PASSWORD`). Remove the bootstrap password from the environment after first login.
+- [ ] Health check wired to your load balancer: `GET /api/v1/health` (Flask) or `GET /api/health` (ASGI).
+- [ ] Log aggregation captures stdout. Set `CPI_LOG_JSON=1` if your shipper (CloudWatch, Loki, GCP logging, Datadog) expects structured logs. See below.
+- [ ] Alert engine tuned: `CPI_ALERT_EVAL_ON_START=0` + `CPI_ALERT_EVAL_INTERVAL_TICKS=30..60` on production (keeps DB load predictable).
+- [ ] Docker image built on a pinned tag and scanned (`trivy image cpi-inventory:<tag>` or your registry's built-in scanner).
+- [ ] CI green on the target commit — see `.github/workflows/ci.yml` (ruff + import smoke + Docker build).
+
+### Observability & logging
+
+- The app configures Python `logging` on import (see `utils/logging_config.py`). Every module uses `getLogger(__name__)` — no `print()` in hot paths.
+- **Level:** `INFO` in production, `DEBUG` in dev. Override with `CPI_LOG_LEVEL=WARNING` (or any stdlib level).
+- **Format:** plain-text by default. Set `CPI_LOG_JSON=1` to emit one JSON object per line (good for CloudWatch Logs Insights, Loki, Elasticsearch).
+- **Noisy loggers** (`werkzeug`, `sqlalchemy.engine`, `urllib3`) are capped at `WARNING` unless you explicitly raise the global level.
+- **Security headers** (`X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`) are attached to every response in production, plus `Strict-Transport-Security` when running over HTTPS. See `utils/server_config.py::_install_security_headers`.
+- **Graceful shutdown** is registered via `atexit` → `dispose_engine()` so pooled database connections close cleanly when gunicorn recycles workers.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push / PR:
+
+1. `ruff check .` — lint (rules live in `pyproject.toml`).
+2. Install `requirements.txt`, then import `wsgi:application` against a temporary SQLite database. Catches most "app won't boot" regressions in ~1 minute.
+3. `docker/build-push-action` builds the production image (no push). Catches Dockerfile breakage early.
+
+Run the same checks locally:
+
+```bash
+pip install ruff
+ruff check .
+python -c "import wsgi; print(wsgi.application)"
+docker build -t cpi-inventory:dev .
+```
+
 ### Browser error: `useId is not a function`
 
 `app.py` already calls `dash._dash_renderer._set_react_version("18.2.0")` so Mantine works with Dash 2.x. If you removed that line, restore it **before** `dash.Dash(...)`, or add a `.env` file in the project root with:

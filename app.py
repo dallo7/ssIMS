@@ -8,6 +8,11 @@ import os
 
 import dash
 
+from utils.logging_config import configure_logging, get_logger
+
+configure_logging()
+log = get_logger(__name__)
+
 # Mantine / DMC ≥0.14 needs React 18 (useId). Dash 2.x defaults to React 16 unless set here.
 dash._dash_renderer._set_react_version("18.2.0")
 
@@ -31,8 +36,10 @@ from utils.navigation import can_access_path, normalize_path
 from routes.api_v1 import bp as cpi_api_v1_bp
 
 # Initialize schema before ORM use.
+log.info("Boot: initializing database schema.")
 init_database()
 seed_if_empty()
+log.info("Boot: database ready (env=%s).", os.environ.get("CPI_ENV", "development") or "development")
 
 _default_alert_eval = "0" if is_production_env() else "1"
 if os.environ.get("CPI_ALERT_EVAL_ON_START", _default_alert_eval).strip().lower() in ("1", "true", "yes"):
@@ -42,7 +49,8 @@ if os.environ.get("CPI_ALERT_EVAL_ON_START", _default_alert_eval).strip().lower(
         with db_session() as _s:
             _evaluate_alerts_on_boot(_s)
     except Exception:
-        pass
+        # Boot must not fail on a transient DAL error; surface in logs instead.
+        log.warning("Initial alert evaluation failed; continuing boot.", exc_info=True)
 
 app = dash.Dash(
     __name__,
@@ -246,13 +254,15 @@ app.layout = html.Div(
 )
 def auth_guard(pathname: str | None):
     p = normalize_path(pathname)
-    if p == "/login":
+    # Public, unauthenticated routes. /welcome is the marketing landing page;
+    # /login is the credential entry point. All other paths require a session.
+    if p in ("/login", "/welcome"):
         return dash.no_update
     if not session.get("user_id"):
-        return dcc.Location(pathname="/login", id="auth-loc", refresh=True)
+        return dcc.Location(pathname="/welcome", id="auth-loc", refresh=True)
     prune_invalid_session()
     if not session.get("user_id"):
-        return dcc.Location(pathname="/login", id="auth-loc", refresh=True)
+        return dcc.Location(pathname="/welcome", id="auth-loc", refresh=True)
     return dash.no_update
 
 
@@ -314,7 +324,7 @@ def apply_theme(theme_data: dict | None, locale_data: dict | None):
 )
 def layout_responsive(pathname: str | None):
     pathname = pathname or ""
-    if "/login" in pathname:
+    if "/login" in pathname or "/welcome" in pathname:
         return {"display": "none"}, {"base": 12, "sm": 12, "md": 12}
     return {"display": "block", "padding": 0}, {"base": 12, "sm": 9, "md": 10}
 
@@ -328,7 +338,7 @@ def layout_responsive(pathname: str | None):
 def chrome_sidebar(pathname: str | None, alert_n: int | None, loc: dict | None):
     pathname = pathname or ""
     u = current_user()
-    if "/login" in pathname or not u:
+    if "/login" in pathname or "/welcome" in pathname or not u:
         return []
     ac = int(alert_n or 0)
     lang = i18n.normalize_lang(loc)
@@ -343,7 +353,7 @@ def chrome_sidebar(pathname: str | None, alert_n: int | None, loc: dict | None):
 def header_visibility(pathname: str | None, _theme):
     pathname = pathname or ""
     base = {"borderBottom": "1px solid var(--cpi-chrome-border, var(--mantine-color-gray-3))"}
-    if "/login" in pathname:
+    if "/login" in pathname or "/welcome" in pathname:
         return {**base, "display": "none"}
     return {**base, "display": "block"}
 
@@ -415,7 +425,7 @@ def sync_locale(loc_data, v_float, v_head):
 )
 def lang_float_visibility(pathname: str | None):
     pathname = pathname or ""
-    if "/login" in pathname:
+    if "/login" in pathname or "/welcome" in pathname:
         return {
             "position": "fixed",
             "top": "12px",
@@ -446,11 +456,16 @@ def refresh_alerts(_n, pathname: str | None):
 
                     _eval(s)
                 except Exception:
-                    pass
+                    log.warning(
+                        "Periodic alert evaluation failed at tick %s.",
+                        _n,
+                        exc_info=True,
+                    )
             rows = list_alerts_with_ack_state(s, limit=100)
             open_alerts = sum(1 for r in rows if not r["acknowledged"])
         return open_alerts
     except Exception:
+        log.warning("Alert badge refresh failed; reporting 0.", exc_info=True)
         return 0
 
 

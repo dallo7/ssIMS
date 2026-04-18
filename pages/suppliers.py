@@ -4,9 +4,7 @@ from dash import Input, Output, State, callback, dcc, html, register_page
 from dash_ag_grid import AgGrid
 from dash.exceptions import PreventUpdate
 from flask import session
-from sqlalchemy import select
 
-from database import models
 from database.dal import create_supplier, list_suppliers, soft_delete_supplier, update_supplier
 from database.engine import db_session
 from components.page import page_header

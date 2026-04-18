@@ -1,4 +1,3 @@
-import dash
 import dash_mantine_components as dmc
 from dash import Input, Output, State, callback, dcc, html, register_page
 from dash_ag_grid import AgGrid

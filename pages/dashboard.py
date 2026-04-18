@@ -1,4 +1,3 @@
-import dash
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go

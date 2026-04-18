@@ -9,14 +9,14 @@ import math
 import secrets
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Any, Optional, Sequence
+from typing import Any, Sequence
 
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from database import models
 from utils.auth import hash_password, verify_password
-from utils.fifo import consume_fifo, list_batches_fifo
+from utils.fifo import consume_fifo
 
 
 class ImmutableMutationError(RuntimeError):

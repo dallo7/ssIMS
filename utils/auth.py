@@ -6,7 +6,6 @@ from typing import Callable, ParamSpec, TypeVar
 
 import bcrypt
 from flask import session
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from database.engine import db_session
