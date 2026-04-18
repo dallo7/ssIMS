@@ -427,10 +427,12 @@ def sync_locale(loc_data, v_float, v_head):
 def lang_float_visibility(pathname: str | None):
     pathname = pathname or ""
     if "/login" in pathname or "/welcome" in pathname:
+        # Nudge down from the very top so the floating language selector does
+        # not overlap the login card's Sign In button on short viewports.
         return {
             "position": "fixed",
-            "top": "12px",
-            "right": "12px",
+            "top": "56px",
+            "right": "16px",
             "zIndex": 500,
             "width": "188px",
         }
