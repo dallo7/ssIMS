@@ -13,6 +13,7 @@ from database.dal import (
     confirm_sales_order,
     create_sales_order_draft,
     list_customers,
+    list_items,
     list_sales_orders,
     ship_sales_order_line,
 )
@@ -34,6 +35,10 @@ def _can_write():
     return session.get("role") in ("ADMIN", "MANAGER", "STOCK_CLERK")
 
 
+def _section_label(text: str) -> dmc.Text:
+    return dmc.Text(text, fw=600, size="sm", tt="uppercase", c="dimmed")
+
+
 layout = dmc.Stack(
     className="cpi-page-wrap",
     style={"width": "100%", "maxWidth": "100%", "boxSizing": "border-box"},
@@ -48,37 +53,75 @@ layout = dmc.Stack(
                 dmc.Card(
                     withBorder=True,
                     padding="lg",
-                    children=[
-                        dmc.Text("New sales order", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                        dmc.Select(id="so-new-cust", label="Customer", data=[]),
-                        dmc.Button("Create draft", id="so-new-btn", color="cpi", mt="sm"),
-                        dmc.Divider(mt="md", mb="md", label="Add line (draft only)", labelPosition="center"),
-                        dmc.TextInput(id="so-line-item", label="Item ID (pk)", placeholder="e.g. 1"),
-                        dmc.NumberInput(id="so-line-qty", label="Qty", min=0, value=1),
-                        dmc.NumberInput(id="so-line-price", label="Unit price (SSP)", min=0, value=0),
-                        dmc.Button("Add line", id="so-add-line", variant="light", mt="sm"),
-                    ],
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("New sales order"),
+                            dmc.Group(
+                                [
+                                    dmc.Select(
+                                        id="so-new-cust",
+                                        label="Customer",
+                                        data=[],
+                                        style={"flex": 1, "minWidth": 0},
+                                    ),
+                                    dmc.Button("Create draft", id="so-new-btn", color="cpi", mt=22),
+                                ],
+                                gap="sm",
+                                align="flex-end",
+                                wrap="nowrap",
+                            ),
+                            dmc.Divider(label="Add line (draft only)", labelPosition="center"),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 3},
+                                spacing="sm",
+                                children=[
+                                    dmc.Select(
+                                        id="so-line-item",
+                                        label="Item",
+                                        data=[],
+                                        searchable=True,
+                                        clearable=True,
+                                        nothingFoundMessage="No items",
+                                        placeholder="Search items…",
+                                    ),
+                                    dmc.NumberInput(id="so-line-qty", label="Qty", min=0, value=1),
+                                    dmc.NumberInput(id="so-line-price", label="Unit price (SSP)", min=0, value=0),
+                                ],
+                            ),
+                            dmc.Button("Add line", id="so-add-line", variant="light", fullWidth=True),
+                        ],
+                    ),
                 ),
                 dmc.Card(
                     withBorder=True,
                     padding="lg",
-                    children=[
-                        dmc.Text("Workflow", fw=600, mb="sm", size="sm", tt="uppercase", opacity=0.85),
-                        dmc.Select(id="so-pick", label="Select order", data=[], value=None),
-                        dmc.Text(id="so-status", size="sm", c="dimmed", mb="sm"),
-                        dmc.Group(
-                            [
-                                dmc.Button("Confirm", id="so-confirm", color="green", variant="light"),
-                                dmc.Button("Cancel order", id="so-cancel", color="red", variant="light"),
-                            ],
-                            gap="xs",
-                        ),
-                        dmc.Divider(mt="md", mb="md", label="Ship line", labelPosition="center"),
-                        dmc.Select(id="so-ship-line", label="Order line", data=[]),
-                        dmc.NumberInput(id="so-ship-qty", label="Qty to ship", min=0, value=0),
-                        dmc.Select(id="so-ship-loc", label="From location (optional)", data=[], clearable=True),
-                        dmc.Button("Ship", id="so-ship-btn", color="blue", mt="sm"),
-                    ],
+                    children=dmc.Stack(
+                        gap="md",
+                        children=[
+                            _section_label("Workflow"),
+                            dmc.Select(id="so-pick", label="Select order", data=[], value=None),
+                            html.Div(id="so-status"),
+                            dmc.Group(
+                                [
+                                    dmc.Button("Confirm", id="so-confirm", color="green", variant="light"),
+                                    dmc.Button("Cancel order", id="so-cancel", color="red", variant="light"),
+                                ],
+                                gap="xs",
+                            ),
+                            dmc.Divider(label="Ship line", labelPosition="center"),
+                            dmc.SimpleGrid(
+                                cols={"base": 1, "sm": 3},
+                                spacing="sm",
+                                children=[
+                                    dmc.Select(id="so-ship-line", label="Order line", data=[]),
+                                    dmc.NumberInput(id="so-ship-qty", label="Qty to ship", min=0, value=0),
+                                    dmc.Select(id="so-ship-loc", label="From location", data=[], clearable=True),
+                                ],
+                            ),
+                            dmc.Button("Ship", id="so-ship-btn", color="blue", fullWidth=True),
+                        ],
+                    ),
                 ),
             ],
         ),
@@ -105,6 +148,7 @@ def so_header(pathname, loc):
     Output("so-new-cust", "data"),
     Output("so-pick", "data"),
     Output("so-ship-loc", "data"),
+    Output("so-line-item", "data"),
     Input("_pages_location", "pathname"),
     Input("so-version", "data"),
 )
@@ -119,7 +163,53 @@ def so_load_opts(pathname, _v):
             {"label": f"{x.warehouse} / {x.name}", "value": str(x.id)}
             for x in s.scalars(select(models.StorageLocation).order_by(models.StorageLocation.name)).all()
         ]
-    return cust, so_opts, locs
+        item_opts = [
+            {"label": f"{it.item_id} — {it.name}", "value": str(it.id)}
+            for it in list_items(s, active_only=True)
+        ]
+    return cust, so_opts, locs, item_opts
+
+
+@callback(
+    Output("so-line-price", "value"),
+    Input("so-line-item", "value"),
+    prevent_initial_call=True,
+)
+def so_autofill_price(item_pk):
+    if not item_pk:
+        raise PreventUpdate
+    with db_session() as s:
+        it = s.get(models.InventoryItem, int(item_pk))
+        if not it:
+            raise PreventUpdate
+        return float(it.unit_price or 0)
+
+
+_STATUS_COLORS = {
+    "DRAFT": "gray",
+    "CONFIRMED": "green",
+    "PICKING": "blue",
+    "SHIPPED": "indigo",
+    "CANCELLED": "red",
+}
+
+_NUM_CELL = {"textAlign": "right", "fontVariantNumeric": "tabular-nums", "whiteSpace": "nowrap"}
+
+
+def _fmt_qty(v) -> str:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return ""
+    return f"{int(f):,}" if f.is_integer() else f"{f:,.2f}"
+
+
+def _fmt_money(v) -> str:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return ""
+    return f"{f:,.0f}" if f.is_integer() else f"{f:,.2f}"
 
 
 @callback(
@@ -144,43 +234,121 @@ def so_lines_detail(so_id, _v):
         items = {i.id: i.name for i in s.scalars(select(models.InventoryItem)).all()}
         rows = []
         line_opts = []
+        total_ordered = 0.0
+        total_shipped = 0.0
+        total_value = 0.0
         for ln in so.lines:
+            qo = float(ln.quantity_ordered or 0)
+            qs = float(ln.quantity_shipped or 0)
+            up = float(ln.unit_price or 0)
+            total_ordered += qo
+            total_shipped += qs
+            total_value += qo * up
             rows.append(
                 html.Tr(
                     [
-                        html.Td(str(ln.id)),
+                        html.Td(str(ln.id), style=_NUM_CELL),
                         html.Td(items.get(ln.item_id, "")),
-                        html.Td(str(ln.quantity_ordered)),
-                        html.Td(str(ln.quantity_shipped)),
-                        html.Td(str(ln.unit_price)),
+                        html.Td(_fmt_qty(ln.quantity_ordered), style=_NUM_CELL),
+                        html.Td(_fmt_qty(ln.quantity_shipped), style=_NUM_CELL),
+                        html.Td(_fmt_money(ln.unit_price), style=_NUM_CELL),
                     ]
                 )
             )
-            rem = float(ln.quantity_ordered) - float(ln.quantity_shipped)
+            rem = qo - qs
             if rem > 1e-9 and so.status in ("CONFIRMED", "PICKING"):
                 line_opts.append(
                     {
-                        "label": f"#{ln.id} {items.get(ln.item_id, '')[:40]} (rem {rem})",
+                        "label": f"#{ln.id} {items.get(ln.item_id, '')[:40]} (rem {_fmt_qty(rem)})",
                         "value": str(ln.id),
                     }
                 )
         head = html.Tr(
             [
-                html.Th("Line"),
+                html.Th("Line", style=_NUM_CELL),
                 html.Th("Item"),
-                html.Th("Ordered"),
-                html.Th("Shipped"),
-                html.Th("Price"),
+                html.Th("Ordered", style=_NUM_CELL),
+                html.Th("Shipped", style=_NUM_CELL),
+                html.Th("Price (SSP)", style=_NUM_CELL),
             ]
         )
+        if rows:
+            body = html.Tbody(rows)
+            total_style = {**_NUM_CELL, "fontWeight": 600, "borderTop": "2px solid var(--mantine-color-default-border)"}
+            label_style = {"fontWeight": 600, "borderTop": "2px solid var(--mantine-color-default-border)"}
+            foot = html.Tfoot(
+                [
+                    html.Tr(
+                        [
+                            html.Td("", style=label_style),
+                            html.Td("Total", style=label_style),
+                            html.Td(_fmt_qty(total_ordered), style=total_style),
+                            html.Td(_fmt_qty(total_shipped), style=total_style),
+                            html.Td(_fmt_money(total_value), style=total_style),
+                        ]
+                    )
+                ]
+            )
+            table_children = [html.Thead(head), body, foot]
+        else:
+            body = html.Tbody(
+                [
+                    html.Tr(
+                        html.Td(
+                            dmc.Text("No lines on this order yet.", size="sm", c="dimmed", ta="center"),
+                            colSpan=5,
+                            style={"padding": "1rem"},
+                        )
+                    )
+                ]
+            )
+            table_children = [html.Thead(head), body]
         tbl = dmc.Table(
             striped=True,
             highlightOnHover=True,
             withTableBorder=True,
-            children=[html.Thead(head), html.Tbody(rows)],
+            children=table_children,
         )
-        st = f"Status: **{so.status}** · Customer id {so.customer_id}"
-        return tbl, dmc.Text(st), line_opts
+        lines_card = dmc.Card(
+            withBorder=True,
+            padding="md",
+            children=dmc.Stack(
+                gap="sm",
+                children=[
+                    dmc.Group(
+                        [
+                            dmc.Text(
+                                f"Order lines · {so.so_number}",
+                                fw=600,
+                                size="sm",
+                                tt="uppercase",
+                                c="dimmed",
+                            ),
+                            dmc.Text(f"{len(so.lines)} line(s)", size="xs", c="dimmed"),
+                        ],
+                        justify="space-between",
+                    ),
+                    tbl,
+                ],
+            ),
+        )
+        status_node = dmc.Group(
+            [
+                dmc.Badge(
+                    so.status,
+                    color=_STATUS_COLORS.get(so.status, "gray"),
+                    variant="light",
+                ),
+                dmc.Text(
+                    f"{so.so_number} · Customer #{so.customer_id}",
+                    size="sm",
+                    c="dimmed",
+                ),
+            ],
+            gap="sm",
+            align="center",
+        )
+        return lines_card, status_node, line_opts
 
 
 @callback(
