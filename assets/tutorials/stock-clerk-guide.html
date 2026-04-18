@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stock Clerk Guide — How to Register Entries</title>
+<meta name="description" content="A practical, step-by-step guide for stock clerks on how to register entries in the CapitalPay inventory system." />
+<link rel="icon" href="/assets/favicon.ico" />
+<style>
+  :root {
+    --navy:        #0a3268;
+    --navy-dark:   #071f4a;
+    --blue:        #1a6ee8;
+    --blue-soft:   #4a9bff;
+    --blue-tint:   #e7f0ff;
+    --plum:        #7a2f4d;
+    --plum-soft:   #b85d7e;
+    --ink:         #0f172a;
+    --ink-soft:    #475569;
+    --muted:       #64748b;
+    --line:        #e2e8f0;
+    --bg:          #f8fafc;
+    --card:        #ffffff;
+    --good:        #16a34a;
+    --good-tint:   #dcfce7;
+    --warn:        #b45309;
+    --warn-tint:   #fef3c7;
+    --bad:         #b91c1c;
+    --bad-tint:    #fee2e2;
+    --code-bg:     #0f172a;
+    --code-fg:     #e2e8f0;
+    --shadow-sm:   0 1px 2px rgba(15,23,42,.05);
+    --shadow-md:   0 4px 18px rgba(15,23,42,.08);
+    --radius:      14px;
+    --radius-sm:   8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+
+  body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Top hero ---------- */
+  .hero {
+    background:
+      radial-gradient(circle at 80% 20%, rgba(122,47,77,.35), transparent 55%),
+      linear-gradient(135deg, var(--navy) 0%, var(--blue) 55%, var(--plum) 130%);
+    color: #fff;
+    padding: 56px 24px 72px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 24px;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,.16);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: .78rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    margin: 14px 0 10px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .hero p.lede {
+    font-size: 1.05rem;
+    max-width: 760px;
+    margin: 0;
+    color: rgba(255,255,255,.92);
+  }
+  .hero-meta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .hero-meta .chip {
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.28);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 500;
+  }
+
+  /* ---------- Layout ---------- */
+  .shell {
+    max-width: 1100px;
+    margin: -32px auto 0;
+    padding: 0 24px 64px;
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 32px;
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+  }
+  nav.toc h4 {
+    margin: 0 0 10px;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  nav.toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: tocnum;
+  }
+  nav.toc ol li {
+    counter-increment: tocnum;
+    margin: 0;
+  }
+  nav.toc ol li a {
+    display: flex;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    color: var(--ink-soft);
+    font-size: .9rem;
+    line-height: 1.35;
+    transition: background .15s, color .15s;
+  }
+  nav.toc ol li a:hover {
+    background: var(--blue-tint);
+    color: var(--navy);
+    text-decoration: none;
+  }
+  nav.toc ol li a::before {
+    content: counter(tocnum, decimal-leading-zero);
+    color: var(--blue);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  main { min-width: 0; }
+
+  /* ---------- Sections ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+    margin-bottom: 28px;
+  }
+  section.card + section.card { margin-top: 0; }
+  section.card h2 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+    color: var(--navy);
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section.card h2 .num {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--navy) 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card .subtitle {
+    color: var(--muted);
+    font-size: .98rem;
+    margin: 0 0 22px 48px;
+  }
+  section.card h3 {
+    font-size: 1.05rem;
+    margin: 24px 0 8px;
+    color: var(--ink);
+  }
+
+  /* ---------- Steps ---------- */
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+  }
+  ol.steps > li {
+    counter-increment: step;
+    position: relative;
+    padding: 14px 16px 14px 56px;
+    border-left: 2px solid var(--line);
+    margin-left: 16px;
+  }
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: -16px;
+    top: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--blue);
+    color: var(--blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .85rem;
+    box-shadow: var(--shadow-sm);
+  }
+  ol.steps > li:last-child {
+    border-left-color: transparent;
+  }
+
+  /* ---------- Field tables ---------- */
+  table.fields {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 14px 0 6px;
+    font-size: .94rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  table.fields th, table.fields td {
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.fields thead th {
+    background: var(--blue-tint);
+    color: var(--navy);
+    font-weight: 600;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    border-bottom: 1px solid var(--line);
+  }
+  table.fields tbody tr + tr td { border-top: 1px solid var(--line); }
+  table.fields td.field-name {
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  table.fields td.req {
+    width: 90px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .pill.required { background: var(--bad-tint); color: var(--bad); }
+  .pill.optional { background: var(--blue-tint); color: var(--navy); }
+  .pill.auto     { background: #ede9fe; color: #6d28d9; }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    margin: 18px 0;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: .95rem;
+  }
+  .callout strong { display: block; margin-bottom: 2px; }
+  .callout .icon {
+    font-size: 1.1rem;
+    line-height: 1.2;
+    flex-shrink: 0;
+  }
+  .callout.tip   { background: var(--good-tint); border-color: var(--good); color: #14532d; }
+  .callout.warn  { background: var(--warn-tint); border-color: var(--warn); color: #78350f; }
+  .callout.info  { background: var(--blue-tint); border-color: var(--blue); color: var(--navy); }
+  .callout.danger{ background: var(--bad-tint);  border-color: var(--bad);  color: #7f1d1d; }
+
+  /* ---------- Inline UI hints ---------- */
+  kbd {
+    font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    font-size: .85em;
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 1px 7px;
+    color: var(--ink);
+  }
+  .ui {
+    display: inline-block;
+    padding: 1px 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 6px;
+    font-size: .92em;
+    color: var(--navy);
+    font-weight: 500;
+    box-shadow: 0 1px 0 rgba(15,23,42,.04);
+  }
+  .btn-mock {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    color: #fff;
+    background: var(--blue);
+    font-size: .88em;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-mock.green { background: var(--good); }
+  .btn-mock.red   { background: var(--bad); }
+  .btn-mock.navy  { background: var(--navy); }
+
+  code {
+    font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    background: #f1f5f9;
+    color: var(--navy);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .9em;
+  }
+
+  /* ---------- Workflow chip diagram ---------- */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 8px 0 18px;
+    font-size: .9rem;
+  }
+  .flow .step-chip {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--navy);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  .flow .arrow {
+    color: var(--blue);
+    font-weight: 700;
+  }
+
+  /* ---------- Footer ---------- */
+  footer.foot {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    padding: 32px 16px 56px;
+  }
+  footer.foot .pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--good);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.6s infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .55; transform: scale(1.4); }
+  }
+
+  /* ---------- Quick reference ---------- */
+  .qref {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 8px 0 4px;
+  }
+  .qref .qcard {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  }
+  .qref .qcard b { color: var(--navy); display: block; margin-bottom: 4px; }
+  .qref .qcard small { color: var(--muted); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc {
+      position: static;
+      max-height: none;
+    }
+    section.card { padding: 22px; }
+    section.card h2 { font-size: 1.35rem; }
+    section.card .subtitle { margin-left: 0; }
+  }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .hero { background: #0a3268 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px; }
+    .hero::after { display: none; }
+    nav.toc { display: none; }
+    .shell { display: block; padding: 0 18mm; max-width: none; margin: 12mm 0; }
+    section.card { box-shadow: none; border: 1px solid #cbd5e1; break-inside: avoid; padding: 18px; margin-bottom: 14px; }
+    section.card h2 { color: #0a3268 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .callout { border: 1px solid #94a3b8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: #0a3268 !important; text-decoration: underline; }
+    footer.foot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Stock Clerk · Operations Guide</span>
+    <h1>How to register entries in the inventory system</h1>
+    <p class="lede">
+      Every box that arrives, every item that leaves the shelf, and every move between bins must be recorded
+      so the stock figures stay accurate. This guide walks you through each task in plain language, with the
+      exact fields you'll see on screen.
+    </p>
+    <div class="hero-meta">
+      <span class="chip">For: STOCK_CLERK role</span>
+      <span class="chip">~ 12 min read</span>
+      <span class="chip">Print-friendly</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- =================== TOC =================== -->
+  <nav class="toc" aria-label="Table of contents">
+    <h4>On this page</h4>
+    <ol>
+      <li><a href="#overview">Your daily workflow</a></li>
+      <li><a href="#login">Logging in &amp; navigating</a></li>
+      <li><a href="#stock-in">Recording a delivery (Stock In)</a></li>
+      <li><a href="#stock-out">Recording an issue (Stock Out)</a></li>
+      <li><a href="#receive-po">Receiving a Purchase Order</a></li>
+      <li><a href="#transfer">Transferring stock between bins</a></li>
+      <li><a href="#sales-order">Picking &amp; shipping a Sales Order</a></li>
+      <li><a href="#new-item">Registering a new item</a></li>
+      <li><a href="#kits">Assembling a kit</a></li>
+      <li><a href="#history">Checking history &amp; corrections</a></li>
+      <li><a href="#tips">Daily best practices</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- =================== OVERVIEW =================== -->
+    <section class="card" id="overview">
+      <h2><span class="num">1</span>Your daily workflow</h2>
+      <p class="subtitle">A quick map of what you'll be doing across the system.</p>
+
+      <p>
+        As a stock clerk you are the system's eyes and ears on the warehouse floor. The most common
+        entries you will register, in roughly this order during a typical day, are:
+      </p>
+
+      <div class="flow">
+        <span class="step-chip">Receive deliveries</span>
+        <span class="arrow">→</span>
+        <span class="step-chip">Put away into bins</span>
+        <span class="arrow">→</span>
+        <span class="step-chip">Pick &amp; ship orders</span>
+        <span class="arrow">→</span>
+        <span class="step-chip">Record corrections</span>
+        <span class="arrow">→</span>
+        <span class="step-chip">Reconcile at end of day</span>
+      </div>
+
+      <div class="qref">
+        <div class="qcard">
+          <b>Movements</b>
+          <small>Quick stock in / stock out without a paper PO or SO. Used for ad-hoc deliveries, returns to shelf, samples, breakages.</small>
+        </div>
+        <div class="qcard">
+          <b>Purchase Orders</b>
+          <small>Receive ordered goods against a supplier PO. Stock comes in line by line.</small>
+        </div>
+        <div class="qcard">
+          <b>Sales Orders</b>
+          <small>Pick and ship goods against a customer order, line by line.</small>
+        </div>
+        <div class="qcard">
+          <b>Locations</b>
+          <small>Create new bins and move quantity from one bin to another inside the same warehouse.</small>
+        </div>
+        <div class="qcard">
+          <b>Inventory</b>
+          <small>Look up an item's master data, register new SKUs (sent to your manager for approval).</small>
+        </div>
+        <div class="qcard">
+          <b>Kits &amp; BOM</b>
+          <small>Assemble finished products from their components.</small>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div>
+          <strong>Golden rule</strong>
+          Record the entry the moment the physical movement happens. If you wait, the on-screen
+          quantity will not match what's on the shelf and pickers downstream will be misled.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== LOGIN =================== -->
+    <section class="card" id="login">
+      <h2><span class="num">2</span>Logging in &amp; navigating</h2>
+      <p class="subtitle">Get in, get oriented, get to work.</p>
+
+      <ol class="steps">
+        <li>
+          Open the system in your browser at the URL given by your supervisor (for example
+          <code>https://inventory.shop.com.ss</code>).
+        </li>
+        <li>
+          On the welcome page click <span class="btn-mock">Sign In</span>, then enter your
+          username and password.
+        </li>
+        <li>
+          Choose your preferred language at the top right (English / العربية / Juba Arabic / Dinka).
+          Your choice is remembered next time.
+        </li>
+        <li>
+          Use the left sidebar to jump between modules. The pages you'll use most are
+          <span class="ui">Movements</span>, <span class="ui">Purchase Orders</span>,
+          <span class="ui">Sales Orders</span> and <span class="ui">Locations</span>.
+        </li>
+      </ol>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div>
+          <strong>Tip</strong>
+          The little <span class="ui">?</span> next to a page title gives a one-line reminder of
+          what the page is for. Hover or tap it any time you need a refresher.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== STOCK IN =================== -->
+    <section class="card" id="stock-in">
+      <h2><span class="num">3</span>Recording a delivery (Stock In)</h2>
+      <p class="subtitle">Use this when goods arrive without a formal Purchase Order — for example, a small ad‑hoc delivery, a customer return going back on the shelf, or a sample.</p>
+
+      <p>Open <span class="ui">Movements</span> from the sidebar. The leftmost card is titled <b>Stock in</b>.</p>
+
+      <table class="fields">
+        <thead>
+          <tr><th>Field</th><th class="req">Required?</th><th>What to enter</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="field-name">Which item?</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>Type a few letters from the item name or its SKU (e.g. <code>Maize</code>) and pick from the list.</td>
+          </tr>
+          <tr>
+            <td class="field-name">How many?</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>The quantity in the item's normal unit of measure (bags, cartons, pieces…). Decimals are allowed for items measured by weight.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Cost per unit (if known)</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>If the supplier invoice quotes a cost per unit, enter it here so the inventory value stays accurate. Leave blank if you only know the total or it's a return.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Delivery note or reference</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>The delivery note number, supplier waybill or anything that lets the auditor trace the entry back to a paper document.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Receive into location</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>The bin you're placing the goods in. If left blank, the system uses the item's default storage location.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ol class="steps">
+        <li>Fill the fields above as completely as you can.</li>
+        <li>Press <span class="btn-mock green">Save stock in</span>.</li>
+        <li>A green confirmation message appears at the top — your entry is saved.</li>
+        <li>The history table at the bottom of the page now includes the new transaction with type <code>STOCK_IN</code>.</li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div>
+          <strong>If the goods arrived against a Purchase Order, do NOT use this page.</strong>
+          Use <a href="#receive-po">Receiving a Purchase Order</a> instead, otherwise the PO will
+          stay open and the supplier balance will be wrong.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== STOCK OUT =================== -->
+    <section class="card" id="stock-out">
+      <h2><span class="num">4</span>Recording an issue (Stock Out)</h2>
+      <p class="subtitle">Use this when stock leaves the shelf without a formal Sales Order — internal use, a damaged item written off, samples, etc.</p>
+
+      <p>Still on <span class="ui">Movements</span>, use the middle card titled <b>Stock out</b>.</p>
+
+      <table class="fields">
+        <thead>
+          <tr><th>Field</th><th class="req">Required?</th><th>What to enter</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="field-name">Which item?</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>Search and pick the item leaving the shelf.</td>
+          </tr>
+          <tr>
+            <td class="field-name">How many?</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>The quantity going out. Must not exceed what's on the shelf for that item.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Who / what for?</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>The reason — staff name, department, "damaged", "sample to client X", etc. This is what the auditor will read first.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Issue from location</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>The specific bin you took it from. Leave blank if it doesn't matter.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ol class="steps">
+        <li>Fill in the fields.</li>
+        <li>Press <span class="btn-mock red">Save stock out</span>.</li>
+        <li>A confirmation appears and the history table updates with a <code>STOCK_OUT</code> entry.</li>
+      </ol>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div>
+          <strong>The system always uses the oldest stock first</strong>
+          (so older deliveries clear the shelf before newer ones). You don't have to choose
+          which delivery batch to draw from — just record the quantity.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== RECEIVE PO =================== -->
+    <section class="card" id="receive-po">
+      <h2><span class="num">5</span>Receiving a Purchase Order</h2>
+      <p class="subtitle">When the goods on the truck match a PO that was raised earlier, receive them line by line so the PO is closed properly.</p>
+
+      <ol class="steps">
+        <li>Open <span class="ui">Purchase Orders</span> from the sidebar.</li>
+        <li>
+          In the table at the bottom, find the PO you're receiving against (status will usually be
+          <code>APPROVED</code> or <code>PARTIAL</code>) and click its row to select it.
+        </li>
+        <li>
+          On the right-hand <b>Workflow (selected row)</b> card, type the quantity actually received
+          for the line into <span class="ui">Receive qty (line)</span>.
+        </li>
+        <li>Press <span class="btn-mock">Receive line</span>.</li>
+        <li>Repeat for every line on the delivery note.</li>
+        <li>
+          When every line is fully received, press <span class="btn-mock navy">Close</span> to mark the
+          PO complete.
+        </li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div>
+          <strong>Quantity mismatch?</strong>
+          If the supplier delivered fewer items than ordered, only enter what actually arrived.
+          The PO stays open for the missing balance — it does not auto-cancel. Tell your manager so
+          they can chase the supplier.
+        </div>
+      </div>
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div>
+          <strong>Never receive more than ordered.</strong>
+          If the supplier sent extra, set the rest aside and inform your manager — the surplus
+          must be added through a separate <span class="ui">Stock in</span> with a clear reference,
+          not buried inside a PO line.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== TRANSFER =================== -->
+    <section class="card" id="transfer">
+      <h2><span class="num">6</span>Transferring stock between bins</h2>
+      <p class="subtitle">When you physically move stock from one bin or aisle to another, register the move so the bin map stays correct.</p>
+
+      <p>Open <span class="ui">Locations</span> from the sidebar and use the right-hand <b>Transfer between bins</b> card.</p>
+
+      <table class="fields">
+        <thead>
+          <tr><th>Field</th><th class="req">Required?</th><th>What to enter</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="field-name">Item</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>Search and pick the item being moved.</td>
+          </tr>
+          <tr>
+            <td class="field-name">From</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>The bin you're taking the stock <em>out of</em>.</td>
+          </tr>
+          <tr>
+            <td class="field-name">To</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>The bin you're placing the stock <em>into</em>.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Quantity</td>
+            <td class="req"><span class="pill required">Required</span></td>
+            <td>How much you're moving.</td>
+          </tr>
+          <tr>
+            <td class="field-name">Reference</td>
+            <td class="req"><span class="pill optional">Optional</span></td>
+            <td>Any short note explaining why (e.g. "consolidating broken pallet", "moved closer to dispatch door").</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Press <span class="btn-mock">Transfer</span>. The grid below refreshes to show the new per-bin balances.</p>
+
+      <h3>Need a brand-new bin first?</h3>
+      <ol class="steps">
+        <li>On the same page, use the left card <b>New storage location</b>.</li>
+        <li>Enter the <span class="ui">Bin name</span> (e.g. <code>A-12</code>).</li>
+        <li>Enter the <span class="ui">Warehouse</span> (defaults to <code>Main</code>).</li>
+        <li>Optionally enter a <span class="ui">Zone</span> (e.g. <code>COLD</code> for refrigerated).</li>
+        <li>Press <span class="btn-mock navy">Create location</span>. The new bin is immediately available in every <span class="ui">From</span> / <span class="ui">To</span> picker.</li>
+      </ol>
+    </section>
+
+    <!-- =================== SALES ORDER =================== -->
+    <section class="card" id="sales-order">
+      <h2><span class="num">7</span>Picking &amp; shipping a Sales Order</h2>
+      <p class="subtitle">When a customer order is ready to leave the warehouse, ship it line by line.</p>
+
+      <ol class="steps">
+        <li>Open <span class="ui">Sales Orders</span> from the sidebar.</li>
+        <li>
+          In the right-hand <b>Workflow</b> card, pick the order from the
+          <span class="ui">Select order</span> dropdown — orders with status
+          <code>CONFIRMED</code> or <code>PICKING</code> can be shipped.
+        </li>
+        <li>
+          The status badge under the dropdown turns to the colour of the current state. The line
+          table at the bottom now shows the order's lines, with the columns <b>Ordered</b>,
+          <b>Shipped</b> and <b>Price (SSP)</b> right-aligned and a <b>Total</b> row at the bottom.
+        </li>
+        <li>
+          Under <b>Ship line</b>, choose the line to ship from <span class="ui">Order line</span>
+          (the dropdown only lists lines with quantity still to ship).
+        </li>
+        <li>Enter <span class="ui">Qty to ship</span>. It must not exceed what's still owed on that line.</li>
+        <li>Optionally pick the <span class="ui">From location</span> (the bin you took it from).</li>
+        <li>Press <span class="btn-mock">Ship</span>. The grid refreshes and the line's <b>Shipped</b> column ticks up.</li>
+        <li>Repeat for every line until the order is fully shipped.</li>
+      </ol>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div>
+          <strong>Partial shipments are normal.</strong>
+          Ship what you actually have — the rest stays open and you can ship it on a later run.
+          Do not invent a shipment to "close" a line you can't fulfil.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== NEW ITEM =================== -->
+    <section class="card" id="new-item">
+      <h2><span class="num">8</span>Registering a new item (SKU)</h2>
+      <p class="subtitle">When the supplier brings a product the system has never seen before, you create the master record. Your changes go to your manager for approval before they go live.</p>
+
+      <ol class="steps">
+        <li>Open <span class="ui">Inventory</span> from the sidebar.</li>
+        <li>Press <span class="btn-mock navy">+ New item</span> at the top of the page.</li>
+        <li>Fill the form. The fields you must always set are:
+          <ul>
+            <li><b>Item ID / SKU</b> — a unique short code (e.g. <code>FLR-50KG-NF</code>).</li>
+            <li><b>Name</b> — the human-readable name (e.g. <code>Wheat Flour 50kg</code>).</li>
+            <li><b>Category</b> and <b>Unit of measure</b> — pick from the dropdowns.</li>
+          </ul>
+        </li>
+        <li>Helpful but optional:
+          <ul>
+            <li><b>Reorder point</b> — the system will warn when stock falls below this number.</li>
+            <li><b>Reorder quantity</b> — how much to order when restocking.</li>
+            <li><b>Default storage location</b> — saves you a click later.</li>
+            <li><b>Supplier</b>, <b>Barcode</b>, <b>Expiry date</b> if applicable.</li>
+            <li><b>Unit cost</b> and <b>Unit price</b> — used to value stock and to pre-fill prices on Sales Orders.</li>
+          </ul>
+        </li>
+        <li>Press <span class="btn-mock">Save</span>.</li>
+      </ol>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div>
+          <strong>Your save goes into a queue.</strong>
+          You'll see a confirmation that the request was sent to a manager for approval. Once they
+          approve it on the <span class="ui">Approvals</span> page, the new SKU shows up everywhere
+          (Movements, POs, SOs, Kits…). Until then it is not visible in those pickers.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== KITS =================== -->
+    <section class="card" id="kits">
+      <h2><span class="num">9</span>Assembling a kit</h2>
+      <p class="subtitle">When you physically combine components into a finished product (a hamper, a bundle, a relief kit), record the assembly so the components are subtracted and the finished item is added.</p>
+
+      <ol class="steps">
+        <li>Open <span class="ui">Kits &amp; BOM</span> from the sidebar.</li>
+        <li>
+          On the left card, pick the <span class="ui">Finished product</span>. The components table
+          below shows what each unit of the finished product is made of.
+        </li>
+        <li>
+          On the right card <b>Assemble kits</b>, enter <span class="ui">Quantity to build</span>
+          (e.g. <code>20</code> for twenty hampers).
+        </li>
+        <li>Optionally choose <span class="ui">Receive into location</span> for where the finished kits will sit.</li>
+        <li>Press <span class="btn-mock green">Assemble</span>.</li>
+      </ol>
+
+      <p>The system removes the right amount of each component from stock and adds the finished products. If any component is short, the assembly fails with a clear message — top up the missing component and try again.</p>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div>
+          <strong>Don't assemble what you haven't physically built.</strong>
+          The point of this entry is to mirror reality — record the assembly only after the kits
+          are actually packed and on the shelf.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== HISTORY =================== -->
+    <section class="card" id="history">
+      <h2><span class="num">10</span>Checking history &amp; corrections</h2>
+      <p class="subtitle">How to find a past entry and what to do if you made a mistake.</p>
+
+      <h3>Finding a past entry</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Movements</span>.</li>
+        <li>
+          On the right card <b>History</b>, optionally pick a single item under
+          <span class="ui">One item only</span> to filter.
+        </li>
+        <li>Press <span class="btn-mock">Refresh table</span>.</li>
+        <li>The grid at the bottom shows up to 500 recent transactions, newest first. Each row has the type (<code>STOCK_IN</code>, <code>STOCK_OUT</code>, <code>PO_RECEIPT</code>, <code>SO_SHIPMENT</code>, <code>TRANSFER</code>, <code>ASSEMBLE</code>…), quantity and reference.</li>
+        <li>Use the column header filter to search by reference or transaction ID.</li>
+      </ol>
+
+      <h3>I made a mistake — what now?</h3>
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div>
+          <strong>Do not delete or hide the wrong entry.</strong>
+          Every entry stays in the audit log. The correct fix is to post a <em>compensating</em>
+          entry that reverses it.
+        </div>
+      </div>
+      <ul>
+        <li>Recorded too much <b>Stock in</b>? Post a <b>Stock out</b> for the difference, with a reference like <code>Correction of TX-XXXXX</code>.</li>
+        <li>Recorded too much <b>Stock out</b>? Post a <b>Stock in</b> for the difference, same kind of reference.</li>
+        <li>Wrong PO line? Tell your manager — they can re-open the line on the <span class="ui">Approvals</span> page.</li>
+        <li>Wrong shipment on a Sales Order? Tell your manager — only ADMIN/MANAGER can reverse a shipment.</li>
+      </ul>
+    </section>
+
+    <!-- =================== TIPS =================== -->
+    <section class="card" id="tips">
+      <h2><span class="num">11</span>Daily best practices</h2>
+      <p class="subtitle">Five habits that keep your numbers trustworthy.</p>
+
+      <ol class="steps">
+        <li><b>Record first, then move.</b> Enter the transaction, get the green confirmation, then carry the goods.</li>
+        <li><b>Always add a reference.</b> Future you (and the auditor) will thank you. Even a few words like "broken in transit" is enough.</li>
+        <li><b>Match the paper.</b> If there's a delivery note or invoice number, copy it into the reference field exactly.</li>
+        <li><b>Don't leave drafts hanging.</b> Confirm or cancel draft Sales Orders / POs by end of day so the dashboard reflects reality.</li>
+        <li><b>End-of-day check.</b> Open the dashboard and scroll the "Recent activity" widget — every physical move you did today should be there. If something is missing, post it before logging out.</li>
+      </ol>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div>
+          <strong>If in doubt, ask.</strong>
+          A 30-second WhatsApp to your manager beats an hour of stock-take reconciliation next week.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <span class="pulse"></span>
+  CapitalPay Inventory — Stock Clerk Guide · Print this page or save it as PDF for the warehouse noticeboard.
+</footer>
+
+</body>
+</html>

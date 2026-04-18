@@ -205,6 +205,30 @@ app.layout = html.Div(
                                                             color="gray",
                                                             size="md",
                                                         ),
+                                                        dmc.Tooltip(
+                                                            label="User guide",
+                                                            position="bottom",
+                                                            withArrow=True,
+                                                            children=html.A(
+                                                                dmc.ActionIcon(
+                                                                    DashIconify(
+                                                                        icon="tabler:help-circle",
+                                                                        width=20,
+                                                                    ),
+                                                                    variant="subtle",
+                                                                    color="gray",
+                                                                    size="md",
+                                                                ),
+                                                                id="header-user-guide-link",
+                                                                href="/assets/tutorials/index.html",
+                                                                target="_blank",
+                                                                rel="noopener noreferrer",
+                                                                style={
+                                                                    "display": "inline-flex",
+                                                                    "textDecoration": "none",
+                                                                },
+                                                            ),
+                                                        ),
                                                         dmc.Button(
                                                             "Log out",
                                                             id="btn-logout",
@@ -349,6 +373,22 @@ def header_visibility(pathname: str | None, _theme):
     if "/login" in pathname or "/welcome" in pathname:
         return {**base, "display": "none"}
     return {**base, "display": "block"}
+
+
+@callback(
+    Output("header-user-guide-link", "href"),
+    Input("_pages_location", "pathname"),
+)
+def user_guide_href(_pathname):
+    role = (session.get("role") or "").upper()
+    base = "/assets/tutorials/"
+    if role == "ADMIN":
+        return base + "admin-guide.html"
+    if role == "MANAGER":
+        return base + "manager-guide.html"
+    if role == "STOCK_CLERK":
+        return base + "stock-clerk-guide.html"
+    return base + "index.html"
 
 
 @callback(

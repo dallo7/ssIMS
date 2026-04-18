@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>User Guides — CapitalPay Inventory</title>
+<meta name="description" content="Pick the role-specific user guide for the CapitalPay inventory system." />
+<link rel="icon" href="/assets/favicon.ico" />
+<style>
+  :root {
+    --navy: #0a3268; --navy-dark: #071f4a; --blue: #1a6ee8; --blue-soft: #4a9bff; --blue-tint: #e7f0ff;
+    --plum: #7a2f4d; --plum-soft: #b85d7e; --ink: #0f172a; --ink-soft: #475569; --muted: #64748b;
+    --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --good: #16a34a; --shadow-sm: 0 1px 2px rgba(15,23,42,.05); --shadow-md: 0 8px 32px rgba(15,23,42,.1);
+    --radius: 16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .hero {
+    background:
+      radial-gradient(circle at 80% 20%, rgba(122,47,77,.4), transparent 55%),
+      linear-gradient(135deg, var(--navy) 0%, var(--blue) 55%, var(--plum) 130%);
+    color: #fff; padding: 64px 24px 96px;
+    position: relative; overflow: hidden; text-align: center;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: auto 0 -1px 0; height: 32px;
+    background: var(--bg); border-radius: 32px 32px 0 0;
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-block; background: rgba(255,255,255,.16); color: #fff;
+    padding: 4px 12px; border-radius: 999px; font-size: .78rem;
+    letter-spacing: .12em; text-transform: uppercase; font-weight: 600; backdrop-filter: blur(4px);
+  }
+  .hero h1 {
+    font-size: clamp(1.9rem, 4vw, 2.8rem); margin: 14px 0 12px;
+    font-weight: 700; letter-spacing: -.02em;
+  }
+  .hero p.lede { font-size: 1.05rem; margin: 0 auto; color: rgba(255,255,255,.92); max-width: 600px; }
+
+  main {
+    flex: 1; max-width: 1080px; width: 100%; margin: -48px auto 0;
+    padding: 0 24px 64px; position: relative; z-index: 2;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+  }
+
+  .role-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: linear-gradient(180deg, var(--accent-from), var(--accent-to));
+  }
+  .role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-from);
+    text-decoration: none;
+  }
+
+  .role-card.clerk   { --accent-from: #1a6ee8; --accent-to: #4a9bff; }
+  .role-card.manager { --accent-from: #16a34a; --accent-to: #15803d; }
+  .role-card.admin   { --accent-from: #7a2f4d; --accent-to: #b85d7e; }
+
+  .role-card .icon-wrap {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+    color: #fff; font-size: 1.6rem; font-weight: 700;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-from) 35%, transparent);
+  }
+
+  .role-card h2 {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+    color: var(--navy);
+    letter-spacing: -.01em;
+  }
+  .role-card .role-tag {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent-from);
+    margin-bottom: 14px;
+  }
+  .role-card p.summary {
+    color: var(--ink-soft); font-size: .95rem; margin: 0 0 18px;
+    flex: 1;
+  }
+  .role-card ul.topics {
+    list-style: none; padding: 0; margin: 0 0 22px;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .role-card ul.topics li {
+    background: var(--blue-tint); color: var(--navy);
+    padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 500;
+  }
+  .role-card .open-link {
+    align-self: flex-start;
+    color: var(--accent-from);
+    font-weight: 600;
+    font-size: .95rem;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .role-card .open-link::after { content: "→"; transition: transform .18s; }
+  .role-card:hover .open-link::after { transform: translateX(4px); }
+
+  .extras {
+    margin-top: 36px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .extras h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: var(--navy);
+  }
+  .extras p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: .92rem;
+  }
+  .extras kbd {
+    font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    font-size: .85em; background: #f1f5f9;
+    border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 6px; padding: 1px 7px; color: var(--ink);
+  }
+
+  footer.foot {
+    text-align: center; color: var(--muted); font-size: .85rem;
+    padding: 24px 16px 40px;
+  }
+
+  @media (max-width: 540px) {
+    .hero { padding: 48px 18px 80px; }
+    .role-card { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Help Center</span>
+    <h1>Choose your guide</h1>
+    <p class="lede">
+      Practical, role-specific tutorials for the CapitalPay inventory system. Pick the one that
+      matches your job and bookmark it.
+    </p>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <a class="role-card clerk" href="stock-clerk-guide.html">
+      <span class="icon-wrap">📦</span>
+      <span class="role-tag">For Stock Clerks</span>
+      <h2>Recording stock entries</h2>
+      <p class="summary">
+        Step-by-step on how to register every delivery, issue, transfer and shipment so the on-screen
+        stock figures match the shelf.
+      </p>
+      <ul class="topics">
+        <li>Stock In</li><li>Stock Out</li><li>Receive PO</li>
+        <li>Transfer bins</li><li>Ship SO</li><li>New items</li>
+      </ul>
+      <span class="open-link">Open the guide</span>
+    </a>
+
+    <a class="role-card manager" href="manager-guide.html">
+      <span class="icon-wrap">✓</span>
+      <span class="role-tag">For Managers</span>
+      <h2>Approvals &amp; oversight</h2>
+      <p class="summary">
+        Your daily review routine, how to clear the approvals queue, oversee POs and SOs, read the
+        reports, and handle clerk errors cleanly.
+      </p>
+      <ul class="topics">
+        <li>Approvals</li><li>PO workflow</li><li>SO workflow</li>
+        <li>Reports</li><li>Exceptions</li><li>Weekly checks</li>
+      </ul>
+      <span class="open-link">Open the guide</span>
+    </a>
+
+    <a class="role-card admin" href="admin-guide.html">
+      <span class="icon-wrap">⚙</span>
+      <span class="role-tag">For Administrators</span>
+      <h2>Users, config &amp; audit</h2>
+      <p class="summary">
+        The things only you can do — manage users and roles, configure master data, read the audit
+        log, post corrections, run backups, and respond to incidents.
+      </p>
+      <ul class="topics">
+        <li>Users</li><li>Config</li><li>Auditing</li>
+        <li>Monitoring</li><li>Backups</li><li>Incidents</li>
+      </ul>
+      <span class="open-link">Open the guide</span>
+    </a>
+
+  </div>
+
+  <div class="extras">
+    <h3>Tips for everyone</h3>
+    <p>
+      Each guide is print-friendly — open it and press <kbd>Ctrl</kbd>+<kbd>P</kbd> to save it as a
+      PDF, or print a copy for the warehouse noticeboard. A guide tells you <em>what</em> to do; for
+      <em>why</em> something behaves a certain way, ask your manager or the admin.
+    </p>
+  </div>
+</main>
+
+<footer class="foot">
+  CapitalPay Inventory · <a href="/">Back to the app</a>
+</footer>
+
+</body>
+</html>

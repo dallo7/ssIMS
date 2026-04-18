@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Administrator Guide — Users, Configuration & Audit</title>
+<meta name="description" content="A practical guide for system administrators covering user management, configuration, auditing, monitoring and incident response." />
+<link rel="icon" href="/assets/favicon.ico" />
+<style>
+  :root {
+    --navy: #0a3268; --navy-dark: #071f4a; --blue: #1a6ee8; --blue-soft: #4a9bff; --blue-tint: #e7f0ff;
+    --plum: #7a2f4d; --plum-soft: #b85d7e; --ink: #0f172a; --ink-soft: #475569; --muted: #64748b;
+    --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --good: #16a34a; --good-tint: #dcfce7; --warn: #b45309; --warn-tint: #fef3c7;
+    --bad: #b91c1c; --bad-tint: #fee2e2; --code-bg: #0f172a; --code-fg: #e2e8f0;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.05); --shadow-md: 0 4px 18px rgba(15,23,42,.08);
+    --radius: 14px; --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16px; }
+  a { color: var(--blue); text-decoration: none; } a:hover { text-decoration: underline; }
+  .hero { background: radial-gradient(circle at 20% 20%, rgba(122,47,77,.4), transparent 55%), linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 35%, var(--plum) 130%); color: #fff; padding: 56px 24px 72px; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; inset: auto 0 -1px 0; height: 24px; background: var(--bg); border-radius: 24px 24px 0 0; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-eyebrow { display: inline-block; background: rgba(255,255,255,.16); color: #fff; padding: 4px 12px; border-radius: 999px; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; backdrop-filter: blur(4px); }
+  .hero h1 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); margin: 14px 0 10px; font-weight: 700; letter-spacing: -.02em; }
+  .hero p.lede { font-size: 1.05rem; max-width: 760px; margin: 0; color: rgba(255,255,255,.92); }
+  .hero-meta { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .hero-meta .chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #fff; padding: 6px 12px; border-radius: 999px; font-size: .82rem; font-weight: 500; }
+  .shell { max-width: 1100px; margin: -32px auto 0; padding: 0 24px 64px; position: relative; z-index: 2; display: grid; grid-template-columns: 240px 1fr; gap: 32px; }
+  nav.toc { position: sticky; top: 24px; align-self: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); max-height: calc(100vh - 48px); overflow: auto; }
+  nav.toc h4 { margin: 0 0 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+  nav.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocnum; }
+  nav.toc ol li { counter-increment: tocnum; margin: 0; }
+  nav.toc ol li a { display: flex; gap: 10px; padding: 7px 8px; border-radius: 6px; color: var(--ink-soft); font-size: .9rem; line-height: 1.35; transition: background .15s, color .15s; }
+  nav.toc ol li a:hover { background: var(--blue-tint); color: var(--navy); text-decoration: none; }
+  nav.toc ol li a::before { content: counter(tocnum, decimal-leading-zero); color: var(--blue); font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  main { min-width: 0; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 32px; margin-bottom: 28px; }
+  section.card h2 { font-size: 1.6rem; margin: 0 0 6px; color: var(--navy); letter-spacing: -.01em; display: flex; align-items: center; gap: 12px; }
+  section.card h2 .num { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--plum) 0%, var(--navy) 100%); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; font-weight: 700; box-shadow: var(--shadow-sm); }
+  section.card .subtitle { color: var(--muted); font-size: .98rem; margin: 0 0 22px 48px; }
+  section.card h3 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--ink); }
+  ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+  ol.steps > li { counter-increment: step; position: relative; padding: 14px 16px 14px 56px; border-left: 2px solid var(--line); margin-left: 16px; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: -16px; top: 12px; width: 30px; height: 30px; border-radius: 50%; background: var(--card); border: 2px solid var(--plum); color: var(--plum); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; box-shadow: var(--shadow-sm); }
+  ol.steps > li:last-child { border-left-color: transparent; }
+  table.fields { width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0 6px; font-size: .94rem; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+  table.fields th, table.fields td { padding: 10px 14px; text-align: left; vertical-align: top; }
+  table.fields thead th { background: var(--blue-tint); color: var(--navy); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--line); }
+  table.fields tbody tr + tr td { border-top: 1px solid var(--line); }
+  table.fields td.field-name { font-weight: 600; color: var(--navy); white-space: nowrap; }
+  table.fields td.req { width: 90px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .pill.required { background: var(--bad-tint); color: var(--bad); }
+  .pill.optional { background: var(--blue-tint); color: var(--navy); }
+  .pill.admin    { background: #ede9fe; color: #6d28d9; }
+  .callout { margin: 18px 0; padding: 14px 18px; border-radius: var(--radius-sm); border-left: 4px solid; display: flex; gap: 12px; align-items: flex-start; font-size: .95rem; }
+  .callout strong { display: block; margin-bottom: 2px; }
+  .callout .icon { font-size: 1.1rem; line-height: 1.2; flex-shrink: 0; }
+  .callout.tip   { background: var(--good-tint); border-color: var(--good); color: #14532d; }
+  .callout.warn  { background: var(--warn-tint); border-color: var(--warn); color: #78350f; }
+  .callout.info  { background: var(--blue-tint); border-color: var(--blue); color: var(--navy); }
+  .callout.danger{ background: var(--bad-tint);  border-color: var(--bad);  color: #7f1d1d; }
+  kbd { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .85em; background: #f1f5f9; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; color: var(--ink); }
+  .ui { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); background: #fff; border-radius: 6px; font-size: .92em; color: var(--navy); font-weight: 500; box-shadow: 0 1px 0 rgba(15,23,42,.04); }
+  .btn-mock { display: inline-block; padding: 4px 12px; border-radius: 6px; color: #fff; background: var(--blue); font-size: .88em; font-weight: 600; box-shadow: var(--shadow-sm); }
+  .btn-mock.green { background: var(--good); }
+  .btn-mock.red   { background: var(--bad); }
+  .btn-mock.navy  { background: var(--navy); }
+  .btn-mock.plum  { background: var(--plum); }
+  code { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; background: #f1f5f9; color: var(--navy); padding: 1px 6px; border-radius: 4px; font-size: .9em; }
+  pre.code { background: var(--code-bg); color: var(--code-fg); padding: 14px 16px; border-radius: var(--radius-sm); font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .85rem; line-height: 1.55; overflow-x: auto; margin: 12px 0; }
+  pre.code .c { color: #94a3b8; }
+  pre.code .k { color: #93c5fd; }
+  pre.code .s { color: #fbbf24; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0 18px; font-size: .9rem; }
+  .flow .step-chip { background: #fff; border: 1px solid var(--line); color: var(--navy); padding: 6px 12px; border-radius: 8px; font-weight: 600; box-shadow: var(--shadow-sm); }
+  .flow .arrow { color: var(--plum); font-weight: 700; }
+  footer.foot { text-align: center; color: var(--muted); font-size: .85rem; padding: 32px 16px 56px; }
+  footer.foot .pulse { display: inline-block; width: 8px; height: 8px; background: var(--good); border-radius: 50%; margin-right: 6px; animation: pulse 1.6s infinite; vertical-align: middle; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(1.4); } }
+  .qref { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 8px 0 4px; }
+  .qref .qcard { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); }
+  .qref .qcard b { color: var(--navy); display: block; margin-bottom: 4px; }
+  .qref .qcard small { color: var(--muted); }
+  .role-table th { background: linear-gradient(135deg, var(--navy), var(--plum)) !important; color: #fff !important; }
+  .role-table .yes { color: var(--good); font-weight: 700; }
+  .role-table .no  { color: var(--muted); }
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc { position: static; max-height: none; }
+    section.card { padding: 22px; }
+    section.card h2 { font-size: 1.35rem; }
+    section.card .subtitle { margin-left: 0; }
+  }
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .hero { background: #0a3268 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px; }
+    .hero::after { display: none; }
+    nav.toc { display: none; }
+    .shell { display: block; padding: 0 18mm; max-width: none; margin: 12mm 0; }
+    section.card { box-shadow: none; border: 1px solid #cbd5e1; break-inside: avoid; padding: 18px; margin-bottom: 14px; }
+    section.card h2 { color: #0a3268 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .callout { border: 1px solid #94a3b8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    pre.code { background: #f1f5f9 !important; color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: #0a3268 !important; text-decoration: underline; }
+    footer.foot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Administrator · System Guide</span>
+    <h1>Users, configuration &amp; audit</h1>
+    <p class="lede">
+      You own the system: the people who use it, the master data they touch, and the audit trail that
+      proves what happened. This guide covers the things only ADMIN can do, plus the incident playbook
+      for when something goes wrong.
+    </p>
+    <div class="hero-meta">
+      <span class="chip">For: ADMIN role</span>
+      <span class="chip">~ 18 min read</span>
+      <span class="chip">Print-friendly</span>
+      <span class="chip"><a href="index.html" style="color:#fff;text-decoration:underline">All guides ↗</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="Table of contents">
+    <h4>On this page</h4>
+    <ol>
+      <li><a href="#scope">What only you can do</a></li>
+      <li><a href="#roles">Roles &amp; what each one sees</a></li>
+      <li><a href="#users">Managing users</a></li>
+      <li><a href="#config">System configuration</a></li>
+      <li><a href="#master-data">Master data hygiene</a></li>
+      <li><a href="#auditing">Auditing every action</a></li>
+      <li><a href="#monitoring">Monitoring &amp; alerts</a></li>
+      <li><a href="#corrections">Posting corrections that managers can't</a></li>
+      <li><a href="#backups">Backups &amp; data export</a></li>
+      <li><a href="#deploy">Deploying updates</a></li>
+      <li><a href="#incident">Incident playbook</a></li>
+      <li><a href="#tips">Best practices</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 SCOPE -->
+    <section class="card" id="scope">
+      <h2><span class="num">1</span>What only you can do</h2>
+      <p class="subtitle">Every other role can do the day job. You do the things that change the rules.</p>
+
+      <div class="qref">
+        <div class="qcard"><b>Users</b><small>Create, disable, re-role and reset PINs for any user.</small></div>
+        <div class="qcard"><b>Config</b><small>Categories, units of measure, currencies, integration keys.</small></div>
+        <div class="qcard"><b>Auditing</b><small>The full event log of every transaction in the system.</small></div>
+        <div class="qcard"><b>Monitoring</b><small>System health, queue lag, error stream.</small></div>
+        <div class="qcard"><b>Reverse shipments</b><small>Only ADMIN can undo an SO shipment.</small></div>
+        <div class="qcard"><b>Database backups</b><small>Snapshot, export and restore at the OS level.</small></div>
+      </div>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>You are the safety net.</strong>
+          Clerks record movement, managers approve and oversee, and you make sure the system itself stays trustworthy. When something cannot be fixed through normal flow, the manager calls you.
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 ROLES -->
+    <section class="card" id="roles">
+      <h2><span class="num">2</span>Roles &amp; what each one sees</h2>
+      <p class="subtitle">A quick reference so you can pick the right role when creating or re-roling users.</p>
+
+      <table class="fields role-table">
+        <thead><tr><th>Capability</th><th>VIEWER</th><th>STOCK_CLERK</th><th>MANAGER</th><th>ADMIN</th></tr></thead>
+        <tbody>
+          <tr><td class="field-name">Read dashboard, reports, history</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Record stock movements (in / out)</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Receive PO lines, ship SO lines</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Submit new items / item edits</td><td class="no">—</td><td class="yes">queues</td><td class="yes">live</td><td class="yes">live</td></tr>
+          <tr><td class="field-name">Approve clerk submissions</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Approve / cancel POs and SOs</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Reverse a posted shipment</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">Manage users &amp; roles</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td class="field-name">System config &amp; integrations</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 3 USERS -->
+    <section class="card" id="users">
+      <h2><span class="num">3</span>Managing users</h2>
+      <p class="subtitle">Create, re-role, deactivate and reset credentials. All actions are logged.</p>
+
+      <h3>Create a user</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Users</span> from the sidebar.</li>
+        <li>Press <span class="btn-mock plum">+ New user</span>.</li>
+        <li>Fill in:
+          <ul>
+            <li><b>Username</b> — short, no spaces, lowercase. Used for login.</li>
+            <li><b>Full name</b> — appears in audit logs and on the dashboard greeting.</li>
+            <li><b>Role</b> — pick <span class="pill admin">ADMIN</span> only with extreme care; default to <span class="pill optional">STOCK_CLERK</span>.</li>
+            <li><b>Initial password</b> — tell the user privately and force change at first login.</li>
+            <li><b>PIN</b> — 4–6 digits, used to sign approvals (managers and admins only).</li>
+          </ul>
+        </li>
+        <li>Press <span class="btn-mock">Save</span>.</li>
+      </ol>
+
+      <h3>Change a role or reset access</h3>
+      <ol class="steps">
+        <li>Find the user in the table at the bottom of the Users page (filter by name).</li>
+        <li>Click their row. The right-hand panel exposes <span class="ui">Role</span>, <span class="ui">Reset password</span>, <span class="ui">Reset PIN</span>, <span class="ui">Active</span>.</li>
+        <li>Make the change and press <span class="btn-mock">Save</span>. The user is forced to re-authenticate at next request.</li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div><strong>Never delete users with history.</strong>
+          Toggle <span class="ui">Active</span> off instead. Deletion would orphan their audit entries.</div>
+      </div>
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div><strong>At least two ADMIN accounts at all times.</strong>
+          If the only admin is locked out, you'll need OS-level access to recover. Always keep a backup admin (a personal one and a shared "ops-admin" emergency one stored in the safe).</div>
+      </div>
+    </section>
+
+    <!-- 4 CONFIG -->
+    <section class="card" id="config">
+      <h2><span class="num">4</span>System configuration</h2>
+      <p class="subtitle">The values that shape every page in the app.</p>
+
+      <p>Open <span class="ui">Config</span> from the sidebar. You'll find:</p>
+      <ul>
+        <li><b>Workspace name</b> — shows in the header and on every printed document.</li>
+        <li><b>Default warehouse</b> — pre-fills the warehouse dropdown when a clerk creates a bin.</li>
+        <li><b>Default currency</b> — used for inventory value rollups.</li>
+        <li><b>Reorder defaults</b> — fallback values when a new SKU is created without explicit reorder fields.</li>
+        <li><b>Integration API keys</b> — endpoints that pull live data from external systems (e.g. accounting). Rotate these every 90 days.</li>
+      </ul>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div><strong>Changing units of measure or categories?</strong>
+          These are shared across every item that uses them. Always rename rather than delete; the database preserves IDs but the user-visible label updates everywhere.</div>
+      </div>
+    </section>
+
+    <!-- 5 MASTER DATA -->
+    <section class="card" id="master-data">
+      <h2><span class="num">5</span>Master data hygiene</h2>
+      <p class="subtitle">Categories, units of measure, suppliers, customers — keep them small, clear and consistent.</p>
+
+      <ol class="steps">
+        <li><b>Categories</b> — keep the list under 25. If clerks are submitting one-off categories, talk to the manager about consolidating.</li>
+        <li><b>Units of measure</b> — define them in their canonical form (PIECE, BOX-12, KG, LITER). Do not create both <code>kg</code> and <code>KG</code>.</li>
+        <li><b>Suppliers / Customers</b> — managers maintain these, but you should audit quarterly for duplicates and missing contact details.</li>
+      </ol>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div><strong>Have one source of truth.</strong>
+          When importing a list from Excel, do it once through Config → Bulk import, then disable the Excel sheet. Two parallel lists will diverge within a week.</div>
+      </div>
+    </section>
+
+    <!-- 6 AUDITING -->
+    <section class="card" id="auditing">
+      <h2><span class="num">6</span>Auditing every action</h2>
+      <p class="subtitle">If it happened in the system, it's here, and you can prove who did what and when.</p>
+
+      <p>Open <span class="ui">Auditing</span> from the sidebar. Each row records:</p>
+
+      <table class="fields">
+        <thead><tr><th>Column</th><th>What it tells you</th></tr></thead>
+        <tbody>
+          <tr><td class="field-name">Time</td><td>Server timestamp (UTC) of the event.</td></tr>
+          <tr><td class="field-name">Actor</td><td>The username (and role at the time).</td></tr>
+          <tr><td class="field-name">Action</td><td>e.g. <code>STOCK_IN</code>, <code>PO_RECEIVE</code>, <code>SO_SHIP</code>, <code>USER_CREATE</code>, <code>APPROVAL</code>.</td></tr>
+          <tr><td class="field-name">Subject</td><td>The item / order / user the action affected.</td></tr>
+          <tr><td class="field-name">Reference</td><td>Whatever the actor typed in the reference field.</td></tr>
+          <tr><td class="field-name">IP / device</td><td>Where the request came from.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Common investigations</h3>
+      <ul>
+        <li><b>"Why is SKU X negative?"</b> — Filter by item, sort by time, find the issue that wasn't preceded by a receipt.</li>
+        <li><b>"Who shipped that order yesterday?"</b> — Filter by action <code>SO_SHIP</code> and the SO number.</li>
+        <li><b>"Who reset the manager's password?"</b> — Filter by action <code>USER_PIN_RESET</code> or <code>USER_PWD_RESET</code>.</li>
+      </ul>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>Audit log is append-only.</strong>
+          Nobody — not even ADMIN — can edit or delete an audit row through the UI. If you ever need to redact, do it via a documented database operation with a paper trail.</div>
+      </div>
+    </section>
+
+    <!-- 7 MONITORING -->
+    <section class="card" id="monitoring">
+      <h2><span class="num">7</span>Monitoring &amp; alerts</h2>
+      <p class="subtitle">Spot problems before users report them.</p>
+
+      <p>Open <span class="ui">Monitoring</span> from the sidebar. The page shows:</p>
+      <ul>
+        <li><b>Health checks</b> — DB connectivity, disk usage, response time, last successful backup.</li>
+        <li><b>Approval queue depth</b> — if it's persistently &gt;20, your manager is overloaded; consider promoting a second one.</li>
+        <li><b>Error stream</b> — uncaught exceptions logged in the last 24h, grouped by URL.</li>
+        <li><b>Active sessions</b> — who's logged in right now.</li>
+      </ul>
+
+      <h3>Acknowledging an alert</h3>
+      <ol class="steps">
+        <li>Click the alert row to expand the details.</li>
+        <li>Read the stack trace / context.</li>
+        <li>If you've actioned it, press <span class="btn-mock green">Acknowledge</span>. Acknowledged alerts move to the bottom of the list and stop notifying.</li>
+        <li>If it's still open after 24 hours and unacknowledged, the system pings on-call.</li>
+      </ol>
+    </section>
+
+    <!-- 8 CORRECTIONS -->
+    <section class="card" id="corrections">
+      <h2><span class="num">8</span>Posting corrections that managers can't</h2>
+      <p class="subtitle">Reversing shipments, adjusting historic cost layers, deleting bad master data.</p>
+
+      <h3>Reversing a Sales Order shipment</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Sales Orders</span>, find the SO and click its row.</li>
+        <li>Press <span class="btn-mock plum">Reverse last shipment</span> (only visible to ADMIN).</li>
+        <li>Confirm with your PIN. The shipment is undone, stock is returned, and the audit log records the reversal.</li>
+      </ol>
+
+      <h3>Voiding a duplicate item</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Inventory</span>, find the duplicate.</li>
+        <li>Press <span class="btn-mock red">Soft-delete</span>. The item disappears from pickers but its history stays.</li>
+        <li>If the duplicate had stock, transfer it to the canonical item via Movements first (Stock Out from duplicate, Stock In to canonical) so the on-hand stays correct.</li>
+      </ol>
+
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div><strong>Never hard-delete an item or transaction.</strong>
+          The buttons that suggest "delete" perform a soft delete that preserves history. Hard deletion can only be done with database access and should be logged on the operations runbook.</div>
+      </div>
+    </section>
+
+    <!-- 9 BACKUPS -->
+    <section class="card" id="backups">
+      <h2><span class="num">9</span>Backups &amp; data export</h2>
+      <p class="subtitle">A backup you have not tested is not a backup.</p>
+
+      <h3>Automated backups</h3>
+      <p>The server runs a nightly snapshot of the SQLite database to <code>/var/backups/ssims/</code> at 02:00 server time. Retention: 30 daily, 12 monthly, 7 yearly. The Monitoring page shows the timestamp of the last successful backup — if it's older than 26 hours, escalate.</p>
+
+      <h3>Manual export from the UI</h3>
+      <ul>
+        <li><span class="ui">Reports</span> → any grid → header menu → <i>Export CSV</i>.</li>
+        <li><span class="ui">Auditing</span> → <span class="btn-mock navy">Export to CSV</span> for legal / compliance dumps.</li>
+      </ul>
+
+      <h3>Restoring from backup</h3>
+      <p>Restoration is an OS-level operation:</p>
+      <pre class="code"><span class="c"># on the server, as the deploy user</span>
+sudo systemctl stop ssims
+sudo cp /var/backups/ssims/<span class="s">cpi_inventory-2026-04-17.sqlite</span> \
+        /opt/ssims/data/cpi_inventory.sqlite
+sudo systemctl start ssims</pre>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div><strong>Test the restore once a quarter.</strong>
+          On the staging box. If the file is corrupt, you want to find out before you need it.</div>
+      </div>
+    </section>
+
+    <!-- 10 DEPLOY -->
+    <section class="card" id="deploy">
+      <h2><span class="num">10</span>Deploying updates</h2>
+      <p class="subtitle">When the development team pushes a new release.</p>
+
+      <ol class="steps">
+        <li>Tell the team via WhatsApp / Slack: "deploying in 5 minutes, expect a 30-second blip".</li>
+        <li>SSH into the server.</li>
+        <li>Pull the new code and restart:
+          <pre class="code">cd /opt/ssims
+sudo -u ssims git pull origin main
+sudo systemctl restart ssims</pre>
+        </li>
+        <li>Watch the service come back:
+          <pre class="code">sudo systemctl status ssims
+sudo journalctl -u ssims -n 50 --no-pager</pre>
+        </li>
+        <li>Open the app in your browser, hard-refresh (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>), and click through the dashboard, Movements, Sales Orders, Approvals to verify they load.</li>
+        <li>Announce: "deployed, all green".</li>
+      </ol>
+
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div><strong>Never deploy on a Friday afternoon.</strong>
+          If something breaks, you'll be on the phone all weekend. Deploy Tue–Thu mornings.</div>
+      </div>
+    </section>
+
+    <!-- 11 INCIDENT -->
+    <section class="card" id="incident">
+      <h2><span class="num">11</span>Incident playbook</h2>
+      <p class="subtitle">A repeatable response when something is on fire.</p>
+
+      <ol class="steps">
+        <li><b>Acknowledge.</b> Reply to the alert / call within 5 minutes — even just "looking into it".</li>
+        <li><b>Assess.</b> Open <span class="ui">Monitoring</span>. Is the app up? Is the DB up? Is disk full?</li>
+        <li><b>Contain.</b> If it's a single user breaking things, deactivate them temporarily. If it's the whole app, restart:
+          <pre class="code">sudo systemctl restart ssims</pre>
+        </li>
+        <li><b>Communicate.</b> Tell users in plain language what's happening and your ETA.</li>
+        <li><b>Resolve.</b> Apply the fix (rollback, hotfix, configuration change).</li>
+        <li><b>Post-mortem.</b> Within 48 hours write a one-page note: what happened, why, what you changed, what we'll do so it doesn't recur. File it.</li>
+      </ol>
+
+      <h3>Quick rollback to the previous release</h3>
+      <pre class="code">cd /opt/ssims
+sudo -u ssims git log --oneline -5      <span class="c"># pick the last good SHA</span>
+sudo -u ssims git checkout <span class="s">&lt;sha&gt;</span>
+sudo systemctl restart ssims</pre>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>If the database is corrupted</strong>
+          stop the service, restore from last night's backup, and run a delta from the audit log to replay anything that happened since the snapshot.</div>
+      </div>
+    </section>
+
+    <!-- 12 TIPS -->
+    <section class="card" id="tips">
+      <h2><span class="num">12</span>Best practices for admins</h2>
+      <p class="subtitle">Five rules that separate quiet weeks from chaotic ones.</p>
+      <ol class="steps">
+        <li><b>Principle of least privilege.</b> Default new users to STOCK_CLERK or VIEWER. ADMIN is for two people, max.</li>
+        <li><b>Read the audit log every Monday.</b> 10 minutes. Spot a clerk over-issuing or a manager rubber-stamping before it becomes a quarter-end issue.</li>
+        <li><b>Backups, restores, drills.</b> Backups run themselves; restores need to be rehearsed.</li>
+        <li><b>Document deploys and incidents.</b> A markdown file in <code>docs/runbook/</code> beats memory every time.</li>
+        <li><b>Stay out of the SQL prompt during business hours.</b> Anything you do there bypasses the audit log. Save it for after-hours and write it down.</li>
+      </ol>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <span class="pulse"></span>
+  CapitalPay Inventory — Administrator Guide · <a href="index.html">All guides</a> · Print this page or save as PDF for the operations binder.
+</footer>
+
+</body>
+</html>

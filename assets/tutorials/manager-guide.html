@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Manager Guide — Approvals, Oversight & Reporting</title>
+<meta name="description" content="A practical guide for managers on how to approve clerk submissions, oversee Purchase and Sales Orders, and read the reports." />
+<link rel="icon" href="/assets/favicon.ico" />
+<style>
+  :root {
+    --navy:        #0a3268;
+    --navy-dark:   #071f4a;
+    --blue:        #1a6ee8;
+    --blue-soft:   #4a9bff;
+    --blue-tint:   #e7f0ff;
+    --plum:        #7a2f4d;
+    --plum-soft:   #b85d7e;
+    --ink:         #0f172a;
+    --ink-soft:    #475569;
+    --muted:       #64748b;
+    --line:        #e2e8f0;
+    --bg:          #f8fafc;
+    --card:        #ffffff;
+    --good:        #16a34a;
+    --good-tint:   #dcfce7;
+    --warn:        #b45309;
+    --warn-tint:   #fef3c7;
+    --bad:         #b91c1c;
+    --bad-tint:    #fee2e2;
+    --code-bg:     #0f172a;
+    --code-fg:     #e2e8f0;
+    --shadow-sm:   0 1px 2px rgba(15,23,42,.05);
+    --shadow-md:   0 4px 18px rgba(15,23,42,.08);
+    --radius:      14px;
+    --radius-sm:   8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16px; }
+  a { color: var(--blue); text-decoration: none; } a:hover { text-decoration: underline; }
+  .hero { background: radial-gradient(circle at 80% 20%, rgba(122,47,77,.35), transparent 55%), linear-gradient(135deg, var(--navy) 0%, var(--blue) 55%, var(--plum) 130%); color: #fff; padding: 56px 24px 72px; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; inset: auto 0 -1px 0; height: 24px; background: var(--bg); border-radius: 24px 24px 0 0; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-eyebrow { display: inline-block; background: rgba(255,255,255,.16); color: #fff; padding: 4px 12px; border-radius: 999px; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; backdrop-filter: blur(4px); }
+  .hero h1 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); margin: 14px 0 10px; font-weight: 700; letter-spacing: -.02em; }
+  .hero p.lede { font-size: 1.05rem; max-width: 760px; margin: 0; color: rgba(255,255,255,.92); }
+  .hero-meta { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .hero-meta .chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #fff; padding: 6px 12px; border-radius: 999px; font-size: .82rem; font-weight: 500; }
+  .shell { max-width: 1100px; margin: -32px auto 0; padding: 0 24px 64px; position: relative; z-index: 2; display: grid; grid-template-columns: 240px 1fr; gap: 32px; }
+  nav.toc { position: sticky; top: 24px; align-self: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); max-height: calc(100vh - 48px); overflow: auto; }
+  nav.toc h4 { margin: 0 0 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+  nav.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocnum; }
+  nav.toc ol li { counter-increment: tocnum; margin: 0; }
+  nav.toc ol li a { display: flex; gap: 10px; padding: 7px 8px; border-radius: 6px; color: var(--ink-soft); font-size: .9rem; line-height: 1.35; transition: background .15s, color .15s; }
+  nav.toc ol li a:hover { background: var(--blue-tint); color: var(--navy); text-decoration: none; }
+  nav.toc ol li a::before { content: counter(tocnum, decimal-leading-zero); color: var(--blue); font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  main { min-width: 0; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 32px; margin-bottom: 28px; }
+  section.card h2 { font-size: 1.6rem; margin: 0 0 6px; color: var(--navy); letter-spacing: -.01em; display: flex; align-items: center; gap: 12px; }
+  section.card h2 .num { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--blue) 0%, var(--navy) 100%); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; font-weight: 700; box-shadow: var(--shadow-sm); }
+  section.card .subtitle { color: var(--muted); font-size: .98rem; margin: 0 0 22px 48px; }
+  section.card h3 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--ink); }
+  ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+  ol.steps > li { counter-increment: step; position: relative; padding: 14px 16px 14px 56px; border-left: 2px solid var(--line); margin-left: 16px; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: -16px; top: 12px; width: 30px; height: 30px; border-radius: 50%; background: var(--card); border: 2px solid var(--blue); color: var(--blue); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; box-shadow: var(--shadow-sm); }
+  ol.steps > li:last-child { border-left-color: transparent; }
+  table.fields { width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0 6px; font-size: .94rem; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+  table.fields th, table.fields td { padding: 10px 14px; text-align: left; vertical-align: top; }
+  table.fields thead th { background: var(--blue-tint); color: var(--navy); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--line); }
+  table.fields tbody tr + tr td { border-top: 1px solid var(--line); }
+  table.fields td.field-name { font-weight: 600; color: var(--navy); white-space: nowrap; }
+  table.fields td.req { width: 90px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .pill.required { background: var(--bad-tint); color: var(--bad); }
+  .pill.optional { background: var(--blue-tint); color: var(--navy); }
+  .pill.auto     { background: #ede9fe; color: #6d28d9; }
+  .callout { margin: 18px 0; padding: 14px 18px; border-radius: var(--radius-sm); border-left: 4px solid; display: flex; gap: 12px; align-items: flex-start; font-size: .95rem; }
+  .callout strong { display: block; margin-bottom: 2px; }
+  .callout .icon { font-size: 1.1rem; line-height: 1.2; flex-shrink: 0; }
+  .callout.tip   { background: var(--good-tint); border-color: var(--good); color: #14532d; }
+  .callout.warn  { background: var(--warn-tint); border-color: var(--warn); color: #78350f; }
+  .callout.info  { background: var(--blue-tint); border-color: var(--blue); color: var(--navy); }
+  .callout.danger{ background: var(--bad-tint);  border-color: var(--bad);  color: #7f1d1d; }
+  kbd { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .85em; background: #f1f5f9; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; color: var(--ink); }
+  .ui { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); background: #fff; border-radius: 6px; font-size: .92em; color: var(--navy); font-weight: 500; box-shadow: 0 1px 0 rgba(15,23,42,.04); }
+  .btn-mock { display: inline-block; padding: 4px 12px; border-radius: 6px; color: #fff; background: var(--blue); font-size: .88em; font-weight: 600; box-shadow: var(--shadow-sm); }
+  .btn-mock.green { background: var(--good); }
+  .btn-mock.red   { background: var(--bad); }
+  .btn-mock.navy  { background: var(--navy); }
+  code { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; background: #f1f5f9; color: var(--navy); padding: 1px 6px; border-radius: 4px; font-size: .9em; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0 18px; font-size: .9rem; }
+  .flow .step-chip { background: #fff; border: 1px solid var(--line); color: var(--navy); padding: 6px 12px; border-radius: 8px; font-weight: 600; box-shadow: var(--shadow-sm); }
+  .flow .arrow { color: var(--blue); font-weight: 700; }
+  footer.foot { text-align: center; color: var(--muted); font-size: .85rem; padding: 32px 16px 56px; }
+  footer.foot .pulse { display: inline-block; width: 8px; height: 8px; background: var(--good); border-radius: 50%; margin-right: 6px; animation: pulse 1.6s infinite; vertical-align: middle; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(1.4); } }
+  .qref { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 8px 0 4px; }
+  .qref .qcard { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); }
+  .qref .qcard b { color: var(--navy); display: block; margin-bottom: 4px; }
+  .qref .qcard small { color: var(--muted); }
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0 16px; }
+  .status-grid .s { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: .88rem; }
+  .status-grid .s b { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--navy); margin-bottom: 2px; }
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc { position: static; max-height: none; }
+    section.card { padding: 22px; }
+    section.card h2 { font-size: 1.35rem; }
+    section.card .subtitle { margin-left: 0; }
+  }
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .hero { background: #0a3268 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px; }
+    .hero::after { display: none; }
+    nav.toc { display: none; }
+    .shell { display: block; padding: 0 18mm; max-width: none; margin: 12mm 0; }
+    section.card { box-shadow: none; border: 1px solid #cbd5e1; break-inside: avoid; padding: 18px; margin-bottom: 14px; }
+    section.card h2 { color: #0a3268 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .callout { border: 1px solid #94a3b8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: #0a3268 !important; text-decoration: underline; }
+    footer.foot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Manager · Operations Guide</span>
+    <h1>Approvals, oversight &amp; reporting</h1>
+    <p class="lede">
+      As a manager you are the gate-keeper of stock data quality and the second pair of eyes on every
+      Purchase Order, Sales Order and clerk submission. This guide walks you through your daily review
+      routine and the levers you have to keep the warehouse running cleanly.
+    </p>
+    <div class="hero-meta">
+      <span class="chip">For: MANAGER role</span>
+      <span class="chip">~ 14 min read</span>
+      <span class="chip">Print-friendly</span>
+      <span class="chip"><a href="index.html" style="color:#fff;text-decoration:underline">All guides ↗</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="Table of contents">
+    <h4>On this page</h4>
+    <ol>
+      <li><a href="#daily">Your daily routine</a></li>
+      <li><a href="#dashboard">Reading the dashboard</a></li>
+      <li><a href="#approvals">Approving clerk submissions</a></li>
+      <li><a href="#po-workflow">Purchase Order workflow</a></li>
+      <li><a href="#so-workflow">Sales Order workflow</a></li>
+      <li><a href="#reports">Reading reports</a></li>
+      <li><a href="#partners">Customer &amp; supplier maintenance</a></li>
+      <li><a href="#exceptions">Handling clerk errors &amp; exceptions</a></li>
+      <li><a href="#weekly">Weekly &amp; monthly checks</a></li>
+      <li><a href="#tips">Best practices</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 DAILY -->
+    <section class="card" id="daily">
+      <h2><span class="num">1</span>Your daily routine</h2>
+      <p class="subtitle">A 15-minute morning ritual that catches 90% of issues before they grow.</p>
+
+      <div class="flow">
+        <span class="step-chip">Open dashboard</span><span class="arrow">→</span>
+        <span class="step-chip">Clear pending approvals</span><span class="arrow">→</span>
+        <span class="step-chip">Review POs &amp; SOs in flight</span><span class="arrow">→</span>
+        <span class="step-chip">Scan exceptions</span><span class="arrow">→</span>
+        <span class="step-chip">Brief the team</span>
+      </div>
+
+      <div class="qref">
+        <div class="qcard"><b>Approvals</b><small>Clerk-submitted item creations and edits waiting for your sign-off.</small></div>
+        <div class="qcard"><b>Purchase Orders</b><small>Drafts to approve, deliveries to receive, partials to chase.</small></div>
+        <div class="qcard"><b>Sales Orders</b><small>Drafts to confirm, shipments in progress, cancellations.</small></div>
+        <div class="qcard"><b>Reports</b><small>KPIs, low-stock list, inventory value, movement trends.</small></div>
+        <div class="qcard"><b>Customers / Suppliers</b><small>Master records of trading partners.</small></div>
+        <div class="qcard"><b>Auditing</b><small>Every action a clerk took, fully traceable.</small></div>
+      </div>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>Your job in one sentence</strong>
+          You don't enter movements yourself — you make sure the people who do, do it correctly, on time, and against the right paper trail.
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 DASHBOARD -->
+    <section class="card" id="dashboard">
+      <h2><span class="num">2</span>Reading the dashboard</h2>
+      <p class="subtitle">Four widgets answer the question "is anything on fire today?".</p>
+
+      <ol class="steps">
+        <li><b>KPI strip</b> — Active SKUs, Inventory value, Low-stock count, Out-of-stock count, and Issued in the last 30 days. Any number flashing red means it crossed a threshold overnight.</li>
+        <li><b>Stock health chart</b> — daily issued vs received curve. A widening gap (more out than in) means you'll run dry soon for those items.</li>
+        <li><b>Pending approvals tile</b> — shows the count of clerk submissions waiting for you. Click through to clear them.</li>
+        <li><b>Recent activity</b> — the last few transactions, newest first. Use this to spot a clerk who's stuck or who entered something unusual.</li>
+      </ol>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div><strong>Tip</strong>
+          Switch the dashboard's date filter to <i>Yesterday</i> first thing in the morning — it shows you what closed out overnight and what didn't.
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 APPROVALS -->
+    <section class="card" id="approvals">
+      <h2><span class="num">3</span>Approving clerk submissions</h2>
+      <p class="subtitle">Clerks can't add or change items directly — every change waits in your queue.</p>
+
+      <p>Open <span class="ui">Approvals</span> from the sidebar. The page lists every pending request with the clerk's name, the action they tried (<code>CREATE</code> / <code>UPDATE</code> / <code>SOFT_DELETE</code>) and a short summary.</p>
+
+      <ol class="steps">
+        <li>Click a row to expand it. The <b>Item / summary</b> column shows the proposed values; for an UPDATE it shows old → new for each changed field.</li>
+        <li>Sanity-check:
+          <ul>
+            <li>Does the SKU look like the rest of the catalogue? (e.g. <code>FLR-50KG-NF</code>, not <code>flour bag</code>.)</li>
+            <li>Are <b>Category</b> and <b>Unit of measure</b> sensible?</li>
+            <li>Is <b>Reorder point</b> set so we won't get caught short?</li>
+          </ul>
+        </li>
+        <li>Tick the request(s) you're happy with using the leftmost checkbox.</li>
+        <li>Press <span class="btn-mock">Approve selected</span>. You'll be asked for your <b>PIN</b> — this is your audit signature, do not share it.</li>
+        <li>Wrong submission? Tick it and press <span class="btn-mock red">Reject selected</span>. Always type a short reason — the clerk sees it on their dashboard.</li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div><strong>Don't approve in bulk without reading.</strong>
+          A bad SKU created today is a stock-take headache forever. Take the 10 seconds per row.
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>Approved changes go live immediately.</strong>
+          Once you approve, the item appears in every Movements / PO / SO / Kits picker. There is no second sign-off.
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 PO -->
+    <section class="card" id="po-workflow">
+      <h2><span class="num">4</span>Purchase Order workflow</h2>
+      <p class="subtitle">The five PO statuses and what to do at each one.</p>
+
+      <div class="status-grid">
+        <div class="s"><b>DRAFT</b>Clerk created it. You review and submit.</div>
+        <div class="s"><b>SUBMITTED</b>Submitted to you. You approve.</div>
+        <div class="s"><b>APPROVED</b>Sent to supplier. Wait for delivery.</div>
+        <div class="s"><b>PARTIAL</b>Some lines received, some still owed.</div>
+        <div class="s"><b>CLOSED</b>All received (or you closed it short).</div>
+      </div>
+
+      <h3>Approving a draft PO</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Purchase Orders</span> and click the row of the PO with status <code>SUBMITTED</code>.</li>
+        <li>On the right-hand <b>Workflow (selected row)</b> card, press <span class="btn-mock">Submit</span> if the clerk forgot to (status moves DRAFT → SUBMITTED), then press <span class="btn-mock green">Approve</span>.</li>
+        <li>The PO is now visible to the supplier and ready to receive.</li>
+      </ol>
+
+      <h3>When a delivery arrives</h3>
+      <p>The clerk will normally do this. Your job is to spot mismatches:</p>
+      <ul>
+        <li>Status stuck in <code>PARTIAL</code> for more than 7 days → chase the supplier or close it short.</li>
+        <li>Receive quantity entered as zero on every line → the clerk forgot to enter the qty before pressing <span class="btn-mock">Receive line</span>. Reject and ask them to redo.</li>
+        <li>Cost variance against the PO (rare) → record it via a manual Stock In adjustment with a clear reference, and note it for the supplier reconciliation.</li>
+      </ul>
+
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div><strong>Closing a PO short is a deliberate decision.</strong>
+          Once you press <span class="btn-mock navy">Close</span>, the missing balance disappears from "expected stock". Make sure it's recorded as a supplier shortfall in your manual log.
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 SO -->
+    <section class="card" id="so-workflow">
+      <h2><span class="num">5</span>Sales Order workflow</h2>
+      <p class="subtitle">From customer order to fully shipped, with you confirming at the right moments.</p>
+
+      <div class="status-grid">
+        <div class="s"><b>DRAFT</b>Clerk built it. You confirm to commit stock.</div>
+        <div class="s"><b>CONFIRMED</b>Stock is reserved. Clerk picks &amp; ships.</div>
+        <div class="s"><b>PICKING</b>Some lines shipped, some still owed.</div>
+        <div class="s"><b>SHIPPED</b>All lines fully shipped.</div>
+        <div class="s"><b>CANCELLED</b>You voided it; no stock moved.</div>
+      </div>
+
+      <ol class="steps">
+        <li>Open <span class="ui">Sales Orders</span>. The right-hand <b>Workflow</b> card lists every order.</li>
+        <li>Pick a <code>DRAFT</code> from the dropdown. The lines table shows what's on it, totals at the bottom.</li>
+        <li>Check the customer, the items, and the prices match the customer's PO / quote.</li>
+        <li>Press <span class="btn-mock green">Confirm</span> — the order is now <code>CONFIRMED</code> and the clerk can ship.</li>
+        <li>If something's wrong, press <span class="btn-mock red">Cancel order</span> instead. Cancellation does not consume stock.</li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="icon">⚠</span>
+        <div><strong>Cancelling a partially shipped SO is not possible.</strong>
+          Once a line has been shipped, the order can only be closed naturally. If you really need to undo a shipment, contact the admin — they can post a reversing entry.
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 REPORTS -->
+    <section class="card" id="reports">
+      <h2><span class="num">6</span>Reading reports</h2>
+      <p class="subtitle">The numbers managers care about, and what to do when they shift.</p>
+
+      <h3>The five KPI cards</h3>
+      <table class="fields">
+        <thead><tr><th>KPI</th><th>What it means</th><th>Watch for</th></tr></thead>
+        <tbody>
+          <tr><td class="field-name">Active SKUs</td><td>How many products are in the catalogue.</td><td>Sudden jumps suggest duplicate items being created — check Approvals.</td></tr>
+          <tr><td class="field-name">Inventory value (cost)</td><td>Stock quantity × unit cost across the warehouse.</td><td>A drop without matching sales = stock leaving without a receipt.</td></tr>
+          <tr><td class="field-name">Low-stock SKUs</td><td>Items below their reorder point.</td><td>Action: raise a PO before the count rises further.</td></tr>
+          <tr><td class="field-name">Out-of-stock SKUs</td><td>Items with quantity ≤ 0.</td><td>If a shipped SKU shows OOS, you may be over-issuing — investigate.</td></tr>
+          <tr><td class="field-name">Issued (30d)</td><td>Total issued in the last 30 days, with net change.</td><td>Negative net = you're consuming faster than receiving.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Charts &amp; tables below the KPIs</h3>
+      <ul>
+        <li><b>Daily flow chart</b> — the two-line graph (received vs issued) tells you if you're trending toward a stock-out.</li>
+        <li><b>Top movers</b> — the SKUs with the most activity. Often where errors hide.</li>
+        <li><b>Aging stock</b> — items sitting too long. Talk to sales about discounting.</li>
+      </ul>
+
+      <div class="callout tip">
+        <span class="icon">✓</span>
+        <div><strong>Export anything you need.</strong>
+          The grids on Reports / Movements / Inventory all have a column-header → <i>Export CSV</i> option. Use it for board packs and for sharing with finance.</div>
+      </div>
+    </section>
+
+    <!-- 7 PARTNERS -->
+    <section class="card" id="partners">
+      <h2><span class="num">7</span>Customer &amp; supplier maintenance</h2>
+      <p class="subtitle">Keep the partner records current so POs and SOs route to the right people.</p>
+
+      <h3>Adding a customer</h3>
+      <ol class="steps">
+        <li>Open <span class="ui">Customers</span>.</li>
+        <li>Press <span class="btn-mock navy">+ New customer</span>.</li>
+        <li>Enter <b>Customer code</b> (short unique code, e.g. <code>CUST-JBA-001</code>) and <b>Name</b>.</li>
+        <li>Add contact phone, email, and address. These appear on every SO printed for this customer.</li>
+        <li>Press <span class="btn-mock">Save</span>.</li>
+      </ol>
+
+      <h3>Adding a supplier</h3>
+      <p>Same flow on the <span class="ui">Suppliers</span> page. The <b>Lead time (days)</b> field on a supplier is used by the dashboard to forecast when a re-order should be placed.</p>
+
+      <div class="callout info">
+        <span class="icon">ℹ︎</span>
+        <div><strong>Don't delete partners with history.</strong>
+          Use the <i>Inactive</i> toggle instead so old POs/SOs still resolve their partner name correctly.</div>
+      </div>
+    </section>
+
+    <!-- 8 EXCEPTIONS -->
+    <section class="card" id="exceptions">
+      <h2><span class="num">8</span>Handling clerk errors &amp; exceptions</h2>
+      <p class="subtitle">The most common things that go wrong, and the fastest way to fix them.</p>
+
+      <table class="fields">
+        <thead><tr><th>Symptom</th><th>Likely cause</th><th>Your fix</th></tr></thead>
+        <tbody>
+          <tr><td class="field-name">PO stuck in PARTIAL for days</td><td>Supplier didn't deliver the rest.</td><td>Press <span class="btn-mock navy">Close</span> on the PO; log the shortfall.</td></tr>
+          <tr><td class="field-name">SO can't ship — "qty would exceed remaining"</td><td>Clerk over-counted on a previous shipment.</td><td>Open Movements, post a Stock In correction with reference <code>Reverse over-ship of SO-XXXX</code>, then ship.</td></tr>
+          <tr><td class="field-name">Item negative on Reports</td><td>Stock Out posted before the matching Stock In.</td><td>Find the missing receipt in Auditing and post it via Stock In with the original delivery note as reference.</td></tr>
+          <tr><td class="field-name">Duplicate SKU appeared</td><td>Two clerks submitted the same item from different shifts.</td><td>Approve one, reject the other with reason "duplicate of SKU-XYZ".</td></tr>
+          <tr><td class="field-name">Approval queue piling up</td><td>You're the bottleneck.</td><td>Either approve daily or delegate the role to a second manager via the Users page.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout danger">
+        <span class="icon">✕</span>
+        <div><strong>Never edit the database directly.</strong>
+          Every correction must go through the UI so the audit trail captures it. If you find yourself wanting to "just fix it in SQL", call the admin.</div>
+      </div>
+    </section>
+
+    <!-- 9 WEEKLY -->
+    <section class="card" id="weekly">
+      <h2><span class="num">9</span>Weekly &amp; monthly checks</h2>
+      <p class="subtitle">A short ritual that keeps the warehouse honest over time.</p>
+
+      <h3>Every Friday</h3>
+      <ul>
+        <li>Approvals page is empty.</li>
+        <li>No PO is older than 14 days in <code>SUBMITTED</code> or <code>PARTIAL</code>.</li>
+        <li>No SO is older than 7 days in <code>CONFIRMED</code> without a single shipment.</li>
+        <li>Low-stock list reviewed; POs raised for the top 5.</li>
+      </ul>
+
+      <h3>Monthly</h3>
+      <ul>
+        <li>Run a cycle count on a sample of SKUs (rotate so every SKU is counted at least once a quarter).</li>
+        <li>Compare physical count to system value; for any variance &gt; 2%, post a corrective Stock In/Out with reference <code>CYCLE-COUNT-YYYY-MM</code>.</li>
+        <li>Export the inventory value report and send it to finance.</li>
+      </ul>
+    </section>
+
+    <!-- 10 TIPS -->
+    <section class="card" id="tips">
+      <h2><span class="num">10</span>Best practices for managers</h2>
+      <p class="subtitle">Five habits that keep your team running and your reports trustworthy.</p>
+      <ol class="steps">
+        <li><b>Clear approvals daily.</b> A queue older than 24 hours starts to slow the warehouse.</li>
+        <li><b>Always reject with a reason.</b> Train the team without having to repeat yourself in person.</li>
+        <li><b>Confirm Sales Orders the same hour they arrive.</b> Reserved stock = honest "available to promise" figures.</li>
+        <li><b>Keep your PIN secret.</b> Approvals are signed with your PIN; if you share it, you sign their work.</li>
+        <li><b>Use Auditing, not memory.</b> When something looks off, the Auditing page tells you who, what, when — don't ask, look.</li>
+      </ol>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <span class="pulse"></span>
+  CapitalPay Inventory — Manager Guide · <a href="index.html">All guides</a> · Print this page or save as PDF for offline reference.
+</footer>
+
+</body>
+</html>
