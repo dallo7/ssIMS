@@ -65,7 +65,8 @@ app.index_string = """<!DOCTYPE html>
     <head>
         {%metas%}
         <title>{%title%}</title>
-        <link rel="icon" type="image/png" href="/assets/capitalpay-logo.png"/>
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico"/>
+        <link rel="icon" type="image/png" sizes="256x256" href="/assets/capitalpay-logo.png"/>
         {%favicon%}
         {%css%}
     </head>
