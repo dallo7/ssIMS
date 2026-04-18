@@ -67,6 +67,47 @@ def ensure_minimal_reference(session: Session) -> None:
             session.add(models.SystemConfig(key=k, value=v))
 
 
+def ensure_demo_staff_users(session: Session) -> int:
+    """Idempotently ensure clerk/manager/viewer demo accounts exist.
+
+    Usernames and default passwords match the pattern already used for ``admin/admin``
+    so operators can hand out credentials during a demo. Override any of them via env
+    (e.g. ``CPI_DEMO_CLERK_PASSWORD``) without needing a code change. Returns the
+    number of accounts that were newly created on this call.
+    """
+    role_by_name = {r.name: r for r in session.scalars(select(models.Role)).all()}
+    # If the role catalog is empty (very first boot before reference data is
+    # seeded), defer — the caller will invoke us again after roles exist.
+    if not role_by_name:
+        return 0
+
+    specs = (
+        ("clerk", "STOCK_CLERK", "Stock Clerk", "CPI_DEMO_CLERK_PASSWORD", "clerk"),
+        ("manager", "MANAGER", "Store Manager", "CPI_DEMO_MANAGER_PASSWORD", "manager"),
+        ("viewer", "VIEWER", "Read-only Viewer", "CPI_DEMO_VIEWER_PASSWORD", "viewer"),
+    )
+    created = 0
+    for username, role_name, full_name, env_key, default_pw in specs:
+        if session.scalar(select(models.User).where(models.User.username == username)):
+            continue
+        role = role_by_name.get(role_name)
+        if not role:
+            continue
+        pw = (os.environ.get(env_key) or "").strip() or default_pw
+        session.add(
+            models.User(
+                username=username,
+                password_hash=hash_password(pw),
+                full_name=full_name,
+                role_id=role.id,
+            )
+        )
+        created += 1
+    if created:
+        session.flush()
+    return created
+
+
 def bootstrap_admin_from_env(session: Session) -> bool:
     """If there are no users and CPI_BOOTSTRAP_ADMIN_PASSWORD is set, create the first admin. Returns True if created."""
     if session.scalar(select(models.User).limit(1)):
@@ -111,6 +152,20 @@ def _seed_demo_dataset(session: Session) -> None:
             role_id=rid["ADMIN"],
         )
     )
+    for username, role_name, full_name, default_pw in (
+        ("clerk", "STOCK_CLERK", "Stock Clerk", "clerk"),
+        ("manager", "MANAGER", "Store Manager", "manager"),
+        ("viewer", "VIEWER", "Read-only Viewer", "viewer"),
+    ):
+        pw = (os.environ.get(f"CPI_DEMO_{role_name.split('_')[-1]}_PASSWORD") or "").strip() or default_pw
+        session.add(
+            models.User(
+                username=username,
+                password_hash=_hash(pw),
+                full_name=full_name,
+                role_id=rid[role_name],
+            )
+        )
 
     cats = [
         models.Category(name="Beverages", abc_class="A"),
@@ -304,9 +359,17 @@ def seed_if_empty():
         if _is_minimal_mode(mode):
             ensure_minimal_reference(session)
             bootstrap_admin_from_env(session)
+            # Demo staff accounts are opt-in under minimal/production seeding:
+            # only created when the operator has explicitly set one of the
+            # CPI_DEMO_*_PASSWORD env vars, to avoid leaking weak defaults into prod.
+            if any(os.environ.get(k) for k in
+                   ("CPI_DEMO_CLERK_PASSWORD", "CPI_DEMO_MANAGER_PASSWORD", "CPI_DEMO_VIEWER_PASSWORD")):
+                ensure_demo_staff_users(session)
             session.commit()
             return
-        if session.scalar(select(models.User).limit(1)):
-            return
-        _seed_demo_dataset(session)
+        if not session.scalar(select(models.User).limit(1)):
+            _seed_demo_dataset(session)
+        # Idempotent: brings clerk/manager/viewer up to date even on existing
+        # installs where the demo dataset has already been seeded previously.
+        ensure_demo_staff_users(session)
         session.commit()

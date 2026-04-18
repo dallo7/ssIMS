@@ -96,7 +96,7 @@ _alert_poll_ms = max(30_000, min(_alert_poll_ms, 600_000))
 
 app.layout = html.Div(
     [
-        dcc.Store(id="theme-store", storage_type="local", data={"scheme": "dark"}),
+        dcc.Store(id="theme-store", storage_type="local", data={"scheme": "light"}),
         dcc.Store(id="locale-store", storage_type="local", data={"lang": "en"}),
         dcc.Store(id="cpi-inventory-refresh", data=0),
         dcc.Store(id="alert-badge-store", data=0),
@@ -106,8 +106,8 @@ app.layout = html.Div(
         html.Div(id="rbac-redirect-container"),
         dmc.MantineProvider(
             id="mantine-root",
-            theme=merge_theme("dark", direction="ltr"),
-            forceColorScheme="dark",
+            theme=merge_theme("light", direction="ltr"),
+            forceColorScheme="light",
             children=[
                 html.Div(
                     id="lang-float-wrap",
@@ -311,7 +311,7 @@ def header_i18n(_pathname, loc):
     Input("locale-store", "data"),
 )
 def apply_theme(theme_data: dict | None, locale_data: dict | None):
-    scheme = (theme_data or {}).get("scheme", "dark")
+    scheme = (theme_data or {}).get("scheme", "light")
     lang = i18n.normalize_lang(locale_data)
     direction = i18n.text_direction(lang)
     return merge_theme(scheme, direction=direction), scheme
@@ -363,7 +363,7 @@ def header_visibility(pathname: str | None, _theme):
     Input("theme-store", "data"),
 )
 def theme_icon(data: dict | None):
-    scheme = (data or {}).get("scheme", "dark")
+    scheme = (data or {}).get("scheme", "light")
     icon = "tabler:moon" if scheme == "light" else "tabler:sun"
     return DashIconify(icon=icon, width=22)
 
@@ -375,7 +375,7 @@ def theme_icon(data: dict | None):
     prevent_initial_call=True,
 )
 def toggle_theme(_n, data):
-    cur = (data or {}).get("scheme", "dark")
+    cur = (data or {}).get("scheme", "light")
     nxt = "dark" if cur == "light" else "light"
     return {"scheme": nxt}
 
