@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b3a82">
+    <title>{{ title }}</title>
+
+    {# Browser metadata + favicons (kept identical to the SPA shell). #}
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="256x256" href="/assets/capitalpay-logo.png">
+    <link rel="apple-touch-icon" href="/assets/capitalpay-logo.png">
+
+    {#
+       Critical CSS preload — custom.css owns every cpi-* class on these
+       pages. Preloading lets the browser fetch it in parallel with the HTML
+       and apply it without a render-blocking round-trip on slow links.
+    #}
+    <link rel="preload" href="/assets/custom.css" as="style">
+    <link rel="stylesheet" href="/assets/custom.css">
+
+    {#
+       Tiny inline reset so the page paints with sane defaults *before*
+       custom.css is applied (one paint, no flash of unstyled content).
+    #}
+    <style>
+        /*
+         * Mantine palette tokens. Mantine itself isn't loaded on these public
+         * pages — but custom.css references these variables for colours and
+         * borders. Declaring them here keeps every cpi-landing-* / cpi-login-*
+         * class rendering with the right brand colours on the static HTML.
+         */
+        :root {
+            color-scheme: light;
+            --mantine-color-cpi-0: #E8F1FF;
+            --mantine-color-cpi-1: #D0E4FF;
+            --mantine-color-cpi-2: #A8CFFF;
+            --mantine-color-cpi-3: #7AB8FF;
+            --mantine-color-cpi-4: #4A9BFF;
+            --mantine-color-cpi-5: #1A6EE8;
+            --mantine-color-cpi-6: #155AC0;
+            --mantine-color-cpi-7: #0F4696;
+            --mantine-color-cpi-8: #0A326D;
+            --mantine-color-cpi-9: #061F47;
+            --mantine-color-gray-3: #DEE2E6;
+            --mantine-color-gray-4: #CED4DA;
+            --mantine-color-body: #ffffff;
+            --cpi-chrome-border: rgba(15, 23, 42, 0.08);
+            --cpi-blue-accent: #155AC0;
+        }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: 'Times New Roman', Times, 'Noto Serif', 'Nimbus Roman', 'Noto Naskh Arabic', Georgia, serif;
+            background: #ffffff;
+            color: #1a2540;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a { color: inherit; text-decoration: none; }
+        button { font-family: inherit; cursor: pointer; }
+        .cpi-public-lang {
+            position: fixed;
+            top: 56px;
+            right: 16px;
+            z-index: 50;
+            background: #ffffff;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+        .cpi-public-lang select {
+            border: 0;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1a2540;
+            outline: none;
+        }
+    </style>
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    {#
+       Language switcher: a plain <form> that submits via GET so the
+       server-side handler picks ?lang=… up. No JavaScript needed.
+    #}
+    <form method="get" action="" class="cpi-public-lang" aria-label="Language">
+        <select name="lang" onchange="this.form.submit()">
+            {% for code, label in languages %}
+            <option value="{{ code }}" {% if code == lang %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% block body %}{% endblock %}
+
+    {#
+       Session leak guard — same script the SPA loads, included here so
+       Back-button restores from /welcome and /login also force a fresh
+       page. Kept tiny and inline to avoid a blocking JS request.
+    #}
+    <script>
+        (function () {
+            "use strict";
+            window.addEventListener("pageshow", function (event) {
+                if (event && event.persisted === true) {
+                    try { window.location.replace(window.location.href); }
+                    catch (_e) { window.location.reload(); }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

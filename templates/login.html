@@ -1,0 +1,93 @@
+{% extends "_base.html" %}
+{% block body %}
+<div class="cpi-login-root cpi-login-branded">
+    <div style="margin:0 auto;max-width:420px;width:100%;padding:24px 16px;min-height:100vh;
+                display:flex;align-items:center;justify-content:center;">
+        <div class="cpi-login-card cpi-login-card--ims"
+             style="border-radius:14px;overflow:hidden;width:100%;background:#fff;
+                    box-shadow:0 10px 30px rgba(15,23,42,0.08);border:1px solid rgba(15,23,42,0.08);">
+            <div class="cpi-login-flag-bar"></div>
+            <div style="padding:28px 28px 32px;">
+                <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:nowrap;margin-bottom:24px;">
+                    <img src="/assets/capitalpay-logo.png" alt="" width="48" height="48"
+                         style="border-radius:10px;display:block;flex-shrink:0;">
+                    <div style="min-width:0;">
+                        <h1 class="cpi-login-title"
+                            style="font-weight:700;letter-spacing:-0.02em;line-height:1.25;font-size:22px;margin:0;">
+                            {{ t.title }}
+                        </h1>
+                        <p style="margin:6px 0 0;color:#6b7280;font-size:13px;line-height:1.45;max-width:400px;">
+                            {{ t.tagline }}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" action="{{ url_for('public.login_post') }}" autocomplete="on" novalidate>
+                    <input type="hidden" name="lang" value="{{ lang }}">
+                    {% if next_path %}
+                    <input type="hidden" name="next" value="{{ next_path }}">
+                    {% endif %}
+
+                    <label for="login-user" style="display:block;font-weight:600;font-size:13px;margin-bottom:6px;">
+                        {{ t.user_label }}
+                    </label>
+                    <div style="position:relative;margin-bottom:16px;">
+                        <span style="position:absolute;top:50%;{{ 'right' if dir == 'rtl' else 'left' }}:12px;
+                                     transform:translateY(-50%);color:#94a3b8;display:flex;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </span>
+                        <input id="login-user" name="username" type="text" autocomplete="username"
+                               required autofocus
+                               style="width:100%;padding:10px 14px 10px 40px;border:1px solid #d1d5db;
+                                      border-radius:8px;font-size:15px;font-weight:500;background:#fff;
+                                      color:#1a2540;box-sizing:border-box;">
+                    </div>
+
+                    <label for="login-pass" style="display:block;font-weight:600;font-size:13px;margin-bottom:6px;">
+                        {{ t.pass_label }}
+                    </label>
+                    <div style="position:relative;margin-bottom:16px;">
+                        <span style="position:absolute;top:50%;{{ 'right' if dir == 'rtl' else 'left' }}:12px;
+                                     transform:translateY(-50%);color:#94a3b8;display:flex;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </span>
+                        <input id="login-pass" name="password" type="password" autocomplete="current-password"
+                               required placeholder="{{ t.pass_ph }}"
+                               style="width:100%;padding:10px 14px 10px 40px;border:1px solid #d1d5db;
+                                      border-radius:8px;font-size:15px;font-weight:500;background:#fff;
+                                      color:#1a2540;box-sizing:border-box;">
+                    </div>
+
+                    <div class="cpi-login-msg-slot" style="min-height:1.25rem;margin-bottom:8px;text-align:center;">
+                        {% if error %}
+                        <span style="color:#dc2626;font-size:14px;font-weight:500;">{{ error }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit"
+                            style="width:100%;padding:11px 16px;border:0;border-radius:8px;
+                                   background:var(--mantine-color-cpi-6, #0b3a82);color:#fff;
+                                   font-weight:600;letter-spacing:0.02em;font-size:14px;
+                                   display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        {{ t.signin }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

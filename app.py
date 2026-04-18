@@ -33,6 +33,7 @@ from utils.app_text import primary_app_name
 from utils.server_config import apply_flask_server_settings, is_production_env
 from utils.navigation import can_access_path, normalize_path
 from routes.api_v1 import bp as cpi_api_v1_bp
+from routes.public import bp as cpi_public_bp
 
 # Initialize schema before ORM use.
 log.info("Boot: initializing database schema.")
@@ -85,6 +86,10 @@ app.index_string = """<!DOCTYPE html>
 server = app.server
 server.secret_key = os.environ.get("CPI_SECRET_KEY", "dev-cpi-inventory-change-me")
 server.register_blueprint(cpi_api_v1_bp, url_prefix="/api/v1")
+# Public, Dash-free pages. The Flask URL matcher prefers these static rules
+# over Dash's catch-all for /<path:path>, so /welcome and /login skip the
+# entire SPA bundle (Mantine + AgGrid + dash-renderer) and paint instantly.
+server.register_blueprint(cpi_public_bp)
 apply_flask_server_settings(server)
 
 
