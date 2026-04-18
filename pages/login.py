@@ -8,7 +8,7 @@ from sqlalchemy import select
 from database import models
 from database.dal import insert_activity_log
 from database.engine import db_session
-from components.branding import capital_pay_logo, powered_by_capitalpay
+from components.branding import capital_pay_logo
 from utils import i18n
 from utils.auth import login_user, verify_password
 
@@ -19,47 +19,17 @@ def _title_block(lang: str):
     return dmc.Stack(
         gap="xs",
         children=[
-            dmc.Group(
-                [
-                    dmc.Title(
-                        i18n.login_txt(lang, "title"),
-                        order=3,
-                        className="cpi-login-title",
-                        style={
-                            "fontWeight": 700,
-                            "letterSpacing": "-0.02em",
-                            "lineHeight": 1.25,
-                            "flex": 1,
-                            "minWidth": 0,
-                        },
-                    ),
-                    dmc.Tooltip(
-                        multiline=True,
-                        maw=340,
-                        label=dmc.Stack(
-                            [
-                                dmc.Text(i18n.login_txt(lang, "about_pre"), size="sm"),
-                                powered_by_capitalpay(lang, logo_h=20, text_size="sm"),
-                                dmc.Text(i18n.login_txt(lang, "about_post"), size="sm"),
-                            ],
-                            gap="xs",
-                        ),
-                        withArrow=True,
-                        position="bottom-end",
-                        children=dmc.ActionIcon(
-                            DashIconify(icon="tabler:help-circle", width=22),
-                            variant="light",
-                            color="cpi",
-                            size="lg",
-                            radius="xl",
-                        ),
-                    ),
-                ],
-                gap="sm",
-                align="flex-start",
-                wrap="nowrap",
+            dmc.Title(
+                i18n.login_txt(lang, "title"),
+                order=3,
+                className="cpi-login-title",
+                style={
+                    "fontWeight": 700,
+                    "letterSpacing": "-0.02em",
+                    "lineHeight": 1.25,
+                    "minWidth": 0,
+                },
             ),
-            powered_by_capitalpay(lang, logo_h=20, text_size="xs"),
             dmc.Text(
                 i18n.login_txt(lang, "tagline"),
                 size="xs",
