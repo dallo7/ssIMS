@@ -40,46 +40,24 @@ def _nav_bar() -> html.Div:
                     wrap="nowrap",
                     children=[
                         capital_pay_logo(h=36, radius="md"),
-                        dmc.Stack(
-                            gap=0,
-                            children=[
-                                dmc.Text(
-                                    primary_app_name(),
-                                    className="cpi-landing-brand",
-                                ),
-                                dmc.Text(
-                                    "Powered by CapitalPay",
-                                    className="cpi-landing-brand-sub",
-                                ),
-                            ],
+                        dmc.Text(
+                            primary_app_name(),
+                            className="cpi-landing-brand",
                         ),
                     ],
                 ),
-                dmc.Group(
-                    gap="xs",
-                    align="center",
-                    wrap="nowrap",
-                    children=[
-                        dmc.Anchor(
-                            "How it works",
-                            href="#how",
-                            className="cpi-landing-navlink cpi-landing-navlink--hide-sm",
-                            underline="never",
-                        ),
-                        dcc.Link(
-                            dmc.Button(
-                                "Sign in",
-                                leftSection=DashIconify(icon="tabler:login-2", width=18),
-                                size="sm",
-                                radius="md",
-                                color="cpi",
-                                className="cpi-landing-cta-nav",
-                            ),
-                            href="/login",
-                            refresh=True,
-                            style={"textDecoration": "none"},
-                        ),
-                    ],
+                dcc.Link(
+                    dmc.Button(
+                        "Sign in",
+                        leftSection=DashIconify(icon="tabler:login-2", width=18),
+                        size="sm",
+                        radius="md",
+                        color="cpi",
+                        className="cpi-landing-cta-nav",
+                    ),
+                    href="/login",
+                    refresh=True,
+                    style={"textDecoration": "none"},
                 ),
             ],
         ),
