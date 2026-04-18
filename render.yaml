@@ -1,0 +1,50 @@
+# render.yaml — one-click deploy blueprint for https://render.com
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this repo to GitHub.
+#   2. On Render: New -> Blueprint -> pick the repo.
+#   3. In the service, set CPI_BOOTSTRAP_ADMIN_PASSWORD (Secret) before first deploy.
+#   4. Render will build the Dockerfile, mount /data as a persistent disk,
+#      and give you an https://<name>.onrender.com URL.
+
+services:
+  - type: web
+    name: cpi-inventory
+    runtime: docker
+    plan: starter            # Starter or higher — persistent disks require a paid plan.
+    region: frankfurt        # closest to eu-north-1 users; change as needed
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: CPI_ENV
+        value: production
+      - key: CPI_BEHIND_PROXY
+        value: "1"
+      - key: CPI_SESSION_COOKIE_SECURE
+        value: "1"
+      - key: CPI_HOST
+        value: 0.0.0.0
+      - key: CPI_PORT
+        value: "8050"
+      - key: CPI_SQLITE_PATH
+        value: /data/cpi_inventory.sqlite
+      - key: CPI_SEED_MODE
+        value: minimal
+      - key: CPI_ALERT_EVAL_ON_START
+        value: "0"
+      - key: CPI_ALERT_EVAL_INTERVAL_TICKS
+        value: "60"
+      - key: CPI_SECRET_KEY
+        generateValue: true          # Render creates a strong random value on first deploy.
+      - key: CPI_BOOTSTRAP_ADMIN_USERNAME
+        value: admin
+      - key: CPI_BOOTSTRAP_ADMIN_EMAIL
+        value: admin@example.com
+      - key: CPI_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false                  # mark as secret; fill in the Render dashboard
+    disk:
+      name: cpi-data
+      mountPath: /data
+      sizeGB: 1

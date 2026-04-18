@@ -1,0 +1,16 @@
+{
+  "containerOverrides": [
+    {
+      "name": "app",
+      "command": ["python", "-m", "database.create_bootstrap_admin"],
+      "environment": [
+        { "name": "CPI_BOOTSTRAP_ADMIN_USERNAME", "value": "admin" },
+        { "name": "CPI_BOOTSTRAP_ADMIN_EMAIL", "value": "admin@example.com" }
+      ],
+      "secrets": [
+        { "name": "CPI_BOOTSTRAP_ADMIN_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cpi/bootstrap_admin_password-XXXXXX" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+# VCS / editors
+.git
+.gitignore
+.idea
+.vscode
+
+# Python
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+build
+dist
+
+# Secrets / local config (NEVER bake into the image — use ECS secrets)
+.env
+.env.*
+!.env.example
+
+# Docs / CI artifacts that don't belong in the image
+*.md
+!README.md
+deploy
+terraform
+.github
+
+# Misc
+*.log
+*.sqlite
+*.sqlite-*
+*.db
+data/
+capital_pay_inventory/capital_pay_inventory

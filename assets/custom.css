@@ -1,0 +1,1829 @@
+/* Professional dashboard chrome for Smart-Shop / CapitalPay IMS.
+   Inter for UI + Noto Naskh Arabic for RTL + Noto Serif kept for login branding. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap");
+
+/* Global serif stack — Times New Roman across the whole app. */
+html,
+body,
+#react-entry-point,
+.mantine-Text-root,
+.mantine-Title-root,
+.mantine-Button-root,
+.mantine-Badge-root,
+.mantine-NavLink-root,
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-NumberInput-input,
+.mantine-Select-input,
+.mantine-Textarea-input {
+  font-family: 'Times New Roman', Times, 'Noto Serif', 'Nimbus Roman',
+    'Noto Naskh Arabic', Georgia, serif !important;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+body,
+#react-entry-point {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+#react-entry-point {
+  min-height: 100vh;
+}
+
+/* ----------------------------------------------------------------------
+   Design tokens — spacing / radius rhythm reused across custom widgets.
+   Kept in sync with components/theme.py (8-point grid).
+---------------------------------------------------------------------- */
+:root {
+  --cpi-space-1: 4px;
+  --cpi-space-2: 8px;
+  --cpi-space-3: 12px;
+  --cpi-space-4: 16px;
+  --cpi-space-5: 24px;
+  --cpi-space-6: 32px;
+  --cpi-space-7: 48px;
+
+  --cpi-radius-sm: 6px;
+  --cpi-radius-md: 8px;
+  --cpi-radius-lg: 12px;
+
+  --cpi-shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --cpi-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.04);
+  --cpi-shadow-lg: 0 12px 20px -4px rgba(16, 24, 40, 0.12), 0 4px 8px -2px rgba(16, 24, 40, 0.06);
+
+  --cpi-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --cpi-transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-mantine-color-scheme="dark"] {
+  --cpi-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --cpi-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+  --cpi-shadow-lg: 0 16px 32px -6px rgba(0, 0, 0, 0.55), 0 6px 12px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* ----------------------------------------------------------------------
+   Polished scrollbars (subtle, consistent across platforms).
+---------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+  background-clip: padding-box;
+}
+
+html[data-mantine-color-scheme="dark"] * {
+  scrollbar-color: rgba(130, 190, 255, 0.22) transparent;
+}
+
+html[data-mantine-color-scheme="dark"] *::-webkit-scrollbar-thumb {
+  background: rgba(130, 190, 255, 0.22);
+  background-clip: padding-box;
+}
+
+html[data-mantine-color-scheme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(130, 190, 255, 0.42);
+  background-clip: padding-box;
+}
+
+/* Text selection — brand accent. */
+::selection {
+  background: color-mix(in srgb, var(--mantine-color-cpi-4) 42%, transparent);
+  color: inherit;
+}
+
+/* --- Shared tokens --- */
+html[data-mantine-color-scheme="light"],
+:root:not([data-mantine-color-scheme="dark"]) {
+  --cpi-chrome-border: color-mix(in srgb, var(--mantine-color-gray-4), transparent 40%);
+  --cpi-surface-raised: var(--mantine-color-body);
+  --cpi-blue-accent: var(--mantine-color-cpi-6);
+}
+
+html[data-mantine-color-scheme="dark"] {
+  /* Modern, desaturated navy palette.
+     Hierarchy: body (deepest) < shell (sidebar) < raised (cards) < raised-hover.
+     Borders are translucent white hairlines so surfaces feel layered, not boxed. */
+  --cpi-dark-base: #0b0f1a;
+  --cpi-surface-shell: #0f1422;          /* sidebar / outer chrome */
+  --cpi-surface-raised: #151b2d;         /* cards, toolbar, papers */
+  --cpi-surface-raised-hover: #1a2136;   /* card hover lift */
+  --cpi-surface-inset: #10152373;        /* quiet inner panels (with alpha) */
+  --cpi-chrome-border: rgba(255, 255, 255, 0.06);
+  --cpi-chrome-border-strong: rgba(255, 255, 255, 0.11);
+  /* CapitalPay gradient echo (plum / ember) for accents */
+  --cpi-brand-plum: #7a2f4d;
+  --cpi-brand-ember: #c45a2e;
+  --cpi-blue-accent: #6bb0ff;
+  --mantine-color-body: #0b0f1a;
+  --mantine-color-text: #e6ebf5;
+  --mantine-color-dimmed: #8b96ae;
+}
+
+html[data-mantine-color-scheme="dark"] body {
+  background-color: #0b0f1a !important;
+  color: #e6ebf5;
+  /* Subtle vignette + noise keeps the canvas from feeling washed-flat. */
+  background-image:
+    radial-gradient(1200px 600px at 20% -10%, rgba(74, 155, 255, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(122, 47, 77, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+[data-mantine-color-scheme="dark"] #react-entry-point {
+  background-color: #0b0f1a;
+  min-height: 100vh;
+}
+
+/* Page title panel (reference: blue top rule, elevated card) */
+.cpi-page-hero.mantine-Paper-root {
+  border-radius: var(--mantine-radius-md) !important;
+}
+
+html[data-mantine-color-scheme="light"] .cpi-page-hero.mantine-Paper-root,
+[data-mantine-color-scheme="light"] .cpi-page-hero.mantine-Paper-root {
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  border-top: 3px solid var(--mantine-color-cpi-6) !important;
+  background: var(--mantine-color-body) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-page-hero.mantine-Paper-root,
+[data-mantine-color-scheme="dark"] .cpi-page-hero.mantine-Paper-root {
+  background:
+    radial-gradient(600px 140px at 0% 0%, rgba(74, 155, 255, 0.12), transparent 65%),
+    linear-gradient(160deg, #1a2340 0%, #151b2d 100%) !important;
+  border: 1px solid var(--cpi-chrome-border) !important;
+  border-top: 2px solid var(--mantine-color-cpi-5) !important;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 40px -24px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Default cards / papers on pages (not header chrome) */
+html[data-mantine-color-scheme="dark"] .mantine-Card-root,
+[data-mantine-color-scheme="dark"] .mantine-Card-root {
+  background: var(--cpi-surface-raised) !important;
+  border-color: var(--cpi-chrome-border) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* --- Sidebar --- */
+.cpi-sidebar-shell {
+  min-height: 100vh;
+  border-right: 1px solid var(--cpi-chrome-border);
+  background: var(--mantine-color-body);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-sidebar-shell {
+  background: var(--cpi-surface-shell) !important;
+  border-right-color: var(--cpi-chrome-border) !important;
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.02) inset;
+}
+
+.cpi-user-card {
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: transparent !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-user-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--cpi-chrome-border) !important;
+}
+
+.cpi-user-workspace-badge.mantine-Badge-root {
+  max-width: 100%;
+  height: auto;
+  min-height: unset;
+  align-self: flex-start;
+  white-space: normal;
+}
+
+.cpi-user-workspace-badge .mantine-Badge-label,
+.cpi-user-workspace-badge.mantine-Badge-root > * {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  text-align: left;
+  max-width: 100%;
+}
+
+.cpi-alert-strip {
+  border-top: 1px solid var(--cpi-chrome-border);
+}
+
+.cpi-icon-muted {
+  opacity: 0.55;
+}
+
+.cpi-nav-link.mantine-NavLink-root {
+  border-radius: var(--mantine-radius-md);
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.cpi-nav-link.mantine-NavLink-root:hover {
+  background: var(--mantine-color-gray-1);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-nav-link.mantine-NavLink-root:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.cpi-nav-link.mantine-NavLink-root[data-active="true"] {
+  background: var(--mantine-color-cpi-0);
+  color: var(--mantine-color-cpi-7);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--mantine-color-cpi-6);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-nav-link.mantine-NavLink-root[data-active="true"] {
+  background: linear-gradient(90deg, rgba(74, 155, 255, 0.16) 0%, rgba(74, 155, 255, 0.04) 100%) !important;
+  color: #e6ebf5 !important;
+  box-shadow: inset 3px 0 0 var(--mantine-color-cpi-4);
+}
+
+.cpi-sidebar-nav .mantine-ScrollArea-viewport {
+  padding-right: 2px;
+}
+
+/* --- Main column --- */
+.cpi-main-container {
+  max-width: 100%;
+  padding-bottom: var(--cpi-space-5) !important;
+}
+
+.cpi-page-wrap {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-bottom: var(--cpi-space-5);
+}
+
+/* Stack the main scrollable area with pro breathing room — 24 px mobile, 32 px desktop,
+   48 px on very wide screens. Overrides the tight inline padding in app.py. */
+.cpi-main-page-shell {
+  box-sizing: border-box;
+  padding: var(--cpi-space-5) var(--cpi-space-4) !important;
+}
+
+@media (min-width: 48em) {
+  .cpi-main-page-shell {
+    padding: var(--cpi-space-6) var(--cpi-space-6) !important;
+  }
+}
+
+@media (min-width: 80em) {
+  .cpi-main-page-shell {
+    padding: var(--cpi-space-6) var(--cpi-space-7) !important;
+  }
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-main-page-shell {
+  background: transparent !important;
+}
+
+/* Main content column picks up the body's vignette so cards feel like they
+   float on a living canvas instead of a flat slab. */
+html[data-mantine-color-scheme="dark"] #main-col {
+  background:
+    radial-gradient(900px 500px at 20% -10%, rgba(74, 155, 255, 0.07), transparent 60%),
+    radial-gradient(700px 400px at 100% 100%, rgba(122, 47, 77, 0.05), transparent 55%),
+    var(--mantine-color-body) !important;
+}
+
+/* --- Page hero (title panel) --- */
+.cpi-page-hero.mantine-Paper-root {
+  padding: var(--cpi-space-5) var(--cpi-space-5) !important;
+  margin-bottom: var(--cpi-space-5) !important;
+  box-shadow: var(--cpi-shadow-sm) !important;
+}
+
+@media (min-width: 48em) {
+  .cpi-page-hero.mantine-Paper-root {
+    padding: var(--cpi-space-6) var(--cpi-space-6) !important;
+  }
+}
+
+.cpi-page-hero .cpi-page-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mantine-color-cpi-6);
+  margin-bottom: var(--cpi-space-2);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-page-hero .cpi-page-eyebrow {
+  color: var(--mantine-color-cpi-3);
+}
+
+.cpi-page-hero .cpi-page-subtitle {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin-top: var(--cpi-space-1);
+  max-width: 72ch;
+}
+
+/* Generic section eyebrow (reusable inside cards & forms). */
+.cpi-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+  margin-bottom: var(--cpi-space-2);
+  display: inline-block;
+}
+
+.cpi-toolbar-paper {
+  background: var(--mantine-color-body) !important;
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  padding: var(--cpi-space-3) var(--cpi-space-4) !important;
+  box-shadow: var(--cpi-shadow-sm) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-toolbar-paper {
+  background: var(--cpi-surface-raised) !important;
+  border-color: var(--cpi-chrome-border) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* --- Cards: subtle hover lift across the app for any dmc.Card --- */
+.mantine-Card-root {
+  transition: box-shadow var(--cpi-transition), border-color var(--cpi-transition),
+    transform var(--cpi-transition);
+}
+
+.mantine-Card-root:hover {
+  box-shadow: var(--cpi-shadow-md);
+}
+
+html[data-mantine-color-scheme="dark"] .mantine-Card-root:hover {
+  background: var(--cpi-surface-raised-hover) !important;
+  border-color: var(--cpi-chrome-border-strong) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 8px 24px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Inputs feel clickable — subtle border transition + crisp focus. */
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-NumberInput-input,
+.mantine-Select-input,
+.mantine-Textarea-input {
+  transition: border-color var(--cpi-transition-fast), box-shadow var(--cpi-transition-fast),
+    background-color var(--cpi-transition-fast);
+}
+
+.mantine-TextInput-input:hover,
+.mantine-PasswordInput-input:hover,
+.mantine-NumberInput-input:hover,
+.mantine-Select-input:hover,
+.mantine-Textarea-input:hover {
+  border-color: var(--mantine-color-cpi-5);
+}
+
+/* Buttons — elevation on hover + tactile press animation.
+   Works for filled AND outline/subtle variants, so every click feels responsive. */
+.mantine-Button-root,
+.mantine-ActionIcon-root,
+a.cpi-clerk-dash-btn {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    transform 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 160ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+  will-change: transform;
+}
+
+.mantine-Button-root[data-variant="filled"] {
+  box-shadow: var(--cpi-shadow-sm);
+}
+
+.mantine-Button-root[data-variant="filled"]:hover:not([data-disabled="true"]),
+a.cpi-clerk-dash-btn--primary:hover {
+  box-shadow: var(--cpi-shadow-md);
+  transform: translateY(-1px);
+}
+
+.mantine-Button-root[data-variant="outline"]:hover:not([data-disabled="true"]),
+.mantine-Button-root[data-variant="default"]:hover:not([data-disabled="true"]),
+.mantine-Button-root[data-variant="light"]:hover:not([data-disabled="true"]),
+.mantine-Button-root[data-variant="subtle"]:hover:not([data-disabled="true"]),
+.mantine-ActionIcon-root:hover:not([data-disabled="true"]) {
+  transform: translateY(-1px);
+}
+
+/* Press feedback — sharp, short, satisfying. */
+.mantine-Button-root:active:not([data-disabled="true"]),
+.mantine-ActionIcon-root:active:not([data-disabled="true"]),
+a.cpi-clerk-dash-btn:active {
+  transform: translateY(0) scale(0.97);
+  transition:
+    transform 80ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 80ms ease;
+  box-shadow: var(--cpi-shadow-sm);
+}
+
+.mantine-Button-root[data-variant="filled"]:active:not([data-disabled="true"]) {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+/* Radial pulse on primary-ish buttons — CSS-only, fires once per click. */
+.mantine-Button-root[data-variant="filled"]::after,
+a.cpi-clerk-dash-btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 50% 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.mantine-Button-root[data-variant="filled"]:active::after,
+a.cpi-clerk-dash-btn--primary:active::after {
+  animation: cpi-ripple 420ms ease-out;
+}
+
+@keyframes cpi-ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.45;
+  }
+  80% {
+    width: 260%;
+    height: 260%;
+    opacity: 0.18;
+  }
+  100% {
+    width: 320%;
+    height: 320%;
+    opacity: 0;
+  }
+}
+
+/* Reduced-motion users get color-only feedback, no transforms/animations. */
+@media (prefers-reduced-motion: reduce) {
+  .mantine-Button-root,
+  .mantine-ActionIcon-root,
+  a.cpi-clerk-dash-btn {
+    transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .mantine-Button-root:hover,
+  .mantine-Button-root:active,
+  .mantine-ActionIcon-root:hover,
+  .mantine-ActionIcon-root:active,
+  a.cpi-clerk-dash-btn:hover,
+  a.cpi-clerk-dash-btn:active {
+    transform: none !important;
+  }
+  .mantine-Button-root::after,
+  a.cpi-clerk-dash-btn--primary::after {
+    display: none;
+  }
+}
+
+/* Nav link press feedback */
+.cpi-nav-link.mantine-NavLink-root:active {
+  transform: scale(0.985);
+  transition: transform 70ms ease;
+}
+
+.cpi-kpi-card {
+  height: 100%;
+}
+
+.cpi-kpi-card--accent.mantine-Card-root {
+  border-top: 3px solid var(--mantine-color-cpi-6);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-kpi-card--accent.mantine-Card-root {
+  border-top-color: var(--mantine-color-cpi-5);
+  background:
+    radial-gradient(500px 100px at 100% 0%, rgba(74, 155, 255, 0.10), transparent 55%),
+    var(--cpi-surface-raised) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+.cpi-kpi-card--accent.mantine-Card-root:hover {
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.1);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-kpi-card--accent.mantine-Card-root:hover {
+  background:
+    radial-gradient(500px 100px at 100% 0%, rgba(74, 155, 255, 0.16), transparent 55%),
+    var(--cpi-surface-raised-hover) !important;
+  border-color: var(--cpi-chrome-border-strong) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-kpi-card.mantine-Card-root {
+  background: var(--cpi-surface-raised) !important;
+  border-color: var(--cpi-chrome-border) !important;
+}
+
+.cpi-kpi-value.mantine-Title-root {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.cpi-kpi-card-icon {
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-kpi-card-icon {
+  color: var(--mantine-color-cpi-4) !important;
+  opacity: 0.85;
+}
+
+/* Reports page KPI tiles */
+.cpi-rep-kpi-card.mantine-Card-root {
+  border-left: 4px solid var(--mantine-color-cpi-6);
+  height: 100%;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-kpi-card.mantine-Card-root {
+  border-left-color: var(--mantine-color-cpi-5);
+  background: var(--cpi-surface-raised) !important;
+  border-color: var(--cpi-chrome-border) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+.cpi-rep-kpi-value.mantine-Title-root {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  color: var(--mantine-color-cpi-7);
+  letter-spacing: -0.02em;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-kpi-value.mantine-Title-root {
+  color: var(--mantine-color-cpi-3);
+}
+
+/* Users administration */
+.cpi-users-form-card.mantine-Card-root,
+.cpi-users-directory-card.mantine-Card-root {
+  border-top: 3px solid var(--mantine-color-cpi-6);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-users-form-card.mantine-Card-root,
+html[data-mantine-color-scheme="dark"] .cpi-users-directory-card.mantine-Card-root {
+  border-top-color: var(--mantine-color-cpi-5);
+  background: var(--cpi-surface-raised) !important;
+  border-color: rgba(74, 155, 255, 0.2) !important;
+}
+
+.cpi-users-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--mantine-radius-md);
+}
+
+.cpi-users-table.mantine-Table-table {
+  min-width: 100%;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-users-table .mantine-Table-thead th {
+  background: #0a3268 !important;
+}
+
+/* Plotly */
+.cpi-page-wrap .js-plotly-plot,
+.cpi-page-wrap .plotly-graph-div {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.cpi-page-wrap .plotly-graph-div {
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.cpi-header-bar {
+  background: var(--mantine-color-body) !important;
+  padding-top: var(--cpi-space-3) !important;
+  padding-bottom: var(--cpi-space-3) !important;
+  box-shadow: var(--cpi-shadow-sm);
+}
+
+@media (min-width: 48em) {
+  .cpi-header-bar {
+    padding-left: var(--cpi-space-5) !important;
+    padding-right: var(--cpi-space-5) !important;
+  }
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-header-bar {
+  background: var(--cpi-surface-shell) !important;
+}
+
+/* Sidebar — roomier, clearer section headings. */
+.cpi-sidebar-shell > .mantine-Stack-root {
+  padding: var(--cpi-space-4) var(--cpi-space-4) var(--cpi-space-3) !important;
+  gap: var(--cpi-space-3) !important;
+}
+
+@media (min-width: 48em) {
+  .cpi-sidebar-shell > .mantine-Stack-root {
+    padding: var(--cpi-space-5) var(--cpi-space-4) var(--cpi-space-3) !important;
+  }
+}
+
+.cpi-sidebar-brand {
+  padding-bottom: var(--cpi-space-2);
+}
+
+.cpi-nav-link.mantine-NavLink-root {
+  padding: 0.5rem 0.75rem !important;
+}
+
+.cpi-sidebar-nav .mantine-Text-root[data-size="xs"] {
+  font-size: 0.6875rem !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-left: 0.5rem;
+  margin-top: var(--cpi-space-3) !important;
+  margin-bottom: var(--cpi-space-1) !important;
+}
+
+/* --- Login (CapitalPay IMS — always light card on navy gradient) --- */
+.cpi-login-branded {
+  min-height: 100vh !important;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(122, 47, 77, 0.35) 0%, transparent 55%),
+    radial-gradient(100% 70% at 0% 100%, rgba(196, 90, 46, 0.22) 0%, transparent 50%),
+    linear-gradient(155deg, #0a1830 0%, #122748 38%, #18325c 72%, #0d1f3c 100%) !important;
+}
+
+.cpi-login-card--ims.mantine-Paper-root {
+  background: #ffffff !important;
+  color: #1a2332 !important;
+  border: 1px solid rgba(30, 58, 120, 0.14) !important;
+  box-shadow: 0 18px 50px rgba(4, 14, 36, 0.45) !important;
+  overflow: hidden;
+}
+
+.cpi-login-flag-bar {
+  height: 5px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 22%,
+    #ce1126 22%,
+    #ce1126 48%,
+    #078930 48%,
+    #078930 72%,
+    #fcd116 72%,
+    #fcd116 100%
+  );
+}
+
+.cpi-login-title {
+  color: #2d4a8c !important;
+}
+
+.cpi-login-subtitle {
+  color: #64748b !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.cpi-login-input-icon {
+  color: #94a3b8 !important;
+  opacity: 0.95;
+}
+
+.cpi-login-msg-slot {
+  text-align: center;
+}
+
+/* Professional form chrome inside white card (overrides app dark theme on inputs) */
+.cpi-login-card--ims .mantine-InputLabel-root {
+  color: #334155 !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.01em;
+}
+
+.cpi-login-card--ims .mantine-TextInput-input,
+.cpi-login-card--ims .mantine-PasswordInput-input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 500 !important;
+  font-size: 0.8125rem !important;
+}
+
+.cpi-login-card--ims .mantine-TextInput-input::placeholder,
+.cpi-login-card--ims .mantine-PasswordInput-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+.cpi-login-card--ims .mantine-TextInput-section[data-position="left"],
+.cpi-login-card--ims .mantine-PasswordInput-section[data-position="left"] {
+  color: #94a3b8;
+}
+
+.cpi-login-card--ims .mantine-Button-root[data-variant="filled"] {
+  font-size: 0.8125rem !important;
+}
+
+/* Legacy class if referenced elsewhere */
+.cpi-login-root:not(.cpi-login-branded) {
+  min-height: 100vh;
+  background: var(--mantine-color-gray-0);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-login-root:not(.cpi-login-branded) {
+  background: #082c61 !important;
+}
+
+/* Dash / react-dates pickers (toolbars) */
+html[data-mantine-color-scheme="dark"] .cpi-toolbar-paper .DateInput_input,
+html[data-mantine-color-scheme="dark"] .cpi-toolbar-paper .DateRangePickerInput,
+html[data-mantine-color-scheme="dark"] .cpi-toolbar-paper .SingleDatePickerInput {
+  background: var(--cpi-surface-raised) !important;
+  color: #e8eaef !important;
+  border-color: rgba(74, 155, 255, 0.28) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .CalendarDay__default {
+  color: #e8eaef !important;
+  background: var(--cpi-surface-raised) !important;
+  border-color: rgba(74, 155, 255, 0.15) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .CalendarMonth,
+html[data-mantine-color-scheme="dark"] .DayPicker {
+  background: var(--cpi-surface-raised) !important;
+}
+
+/* AG Grid */
+.ag-theme-alpine {
+  --ag-border-color: var(--mantine-color-gray-3);
+  --ag-header-background-color: var(--mantine-color-gray-0);
+  --ag-row-hover-color: var(--mantine-color-gray-1);
+  --ag-wrapper-border-radius: var(--mantine-radius-md);
+  --ag-foreground-color: var(--mantine-color-text);
+  --ag-background-color: var(--mantine-color-body);
+  --ag-cell-horizontal-padding: 14px;
+  --ag-header-height: 42px;
+  --ag-row-height: 40px;
+  --ag-font-size: 13px;
+  --ag-font-family: var(--mantine-font-family);
+  --ag-header-column-separator-display: none;
+  font-family: var(--mantine-font-family);
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-gray-3);
+  box-shadow: var(--cpi-shadow-sm);
+}
+
+.ag-theme-alpine .ag-header-cell {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mantine-color-dimmed);
+}
+
+.ag-theme-alpine .ag-cell {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+html[data-mantine-color-scheme="dark"] .ag-theme-alpine {
+  --ag-border-color: rgba(130, 190, 255, 0.28);
+  --ag-header-background-color: #0a3268;
+  --ag-background-color: #071f4a;
+  --ag-odd-row-background-color: #082958;
+  --ag-row-hover-color: rgba(130, 190, 255, 0.12);
+  --ag-header-foreground-color: #e8eaef;
+  --ag-foreground-color: #e8eaef;
+}
+
+.cpi-toolbar-paper .DateRangePickerInput,
+.cpi-toolbar-paper .SingleDatePickerInput {
+  border-radius: var(--mantine-radius-md);
+  border-color: var(--mantine-color-gray-4) !important;
+  font-family: var(--mantine-font-family) !important;
+  font-size: var(--mantine-font-size-sm) !important;
+}
+
+.cpi-page-wrap .mantine-Alert-root + .mantine-Alert-root {
+  margin-top: var(--mantine-spacing-sm);
+}
+
+/* Gold-tint warning strip (reference) */
+html[data-mantine-color-scheme="dark"] .mantine-Alert-root[data-variant="light"][data-color="yellow"] {
+  border: 1px solid rgba(252, 209, 22, 0.45) !important;
+  background: rgba(252, 209, 22, 0.08) !important;
+}
+
+.mantine-Modal-body {
+  padding-top: var(--mantine-spacing-xs) !important;
+}
+
+.mantine-Modal-header {
+  padding-bottom: var(--cpi-space-3) !important;
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  margin-bottom: var(--cpi-space-3);
+}
+
+.mantine-Modal-title {
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  letter-spacing: -0.01em;
+}
+
+html[data-mantine-color-scheme="dark"] .mantine-Modal-header {
+  border-bottom-color: rgba(74, 155, 255, 0.18);
+}
+
+html[data-mantine-color-scheme="dark"] .mantine-Modal-content {
+  background: var(--cpi-surface-raised) !important;
+  border: 1px solid rgba(74, 155, 255, 0.22) !important;
+  box-shadow: var(--cpi-shadow-lg) !important;
+}
+
+/* Menus / popovers / tooltips — sharper contrast + shadow depth */
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown {
+  box-shadow: var(--cpi-shadow-md) !important;
+  padding: 6px !important;
+}
+
+html[data-mantine-color-scheme="dark"] .mantine-Menu-dropdown,
+html[data-mantine-color-scheme="dark"] .mantine-Popover-dropdown {
+  background: var(--cpi-surface-raised) !important;
+  border-color: rgba(74, 155, 255, 0.22) !important;
+}
+
+.mantine-Menu-item {
+  border-radius: 6px;
+}
+
+.mantine-Tooltip-tooltip {
+  font-size: 0.75rem !important;
+  padding: 0.35rem 0.6rem !important;
+}
+
+/* Mantine Table rhythm — comfortable rows, subtle zebra */
+.mantine-Table-table thead th {
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+}
+
+.mantine-Table-table tbody td {
+  padding-top: 0.55rem !important;
+  padding-bottom: 0.55rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .mantine-GridCol-root {
+    min-width: 100% !important;
+  }
+}
+
+/* Config: activity log */
+.cpi-activity-shell {
+  overflow: hidden;
+  background: var(--mantine-color-body);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-activity-shell {
+  background: var(--cpi-surface-raised) !important;
+  border-color: rgba(74, 155, 255, 0.2) !important;
+}
+
+.cpi-activity-scroll {
+  border-radius: inherit;
+}
+
+.cpi-activity-scroll .mantine-ScrollArea-viewport {
+  border-radius: inherit;
+}
+
+.cpi-activity-table-wrap {
+  width: 100%;
+  min-width: min(100%, 720px);
+}
+
+.cpi-activity-table-wrap table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.cpi-activity-table-wrap tbody td {
+  vertical-align: top;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-color: var(--mantine-color-gray-3) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-activity-table-wrap tbody td {
+  border-color: rgba(74, 155, 255, 0.15) !important;
+}
+
+/* Config: PIN status */
+.cpi-pin-status-box {
+  background: var(--mantine-color-gray-0) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-pin-status-box {
+  background: rgba(20, 23, 31, 0.95) !important;
+}
+
+.cpi-pin-status-box--ok,
+.cpi-pin-status-box--warn {
+  border-color: var(--mantine-color-gray-3) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-pin-status-box--ok,
+html[data-mantine-color-scheme="dark"] .cpi-pin-status-box--warn {
+  border-color: rgba(74, 155, 255, 0.25) !important;
+}
+
+/* --- Stock clerk: larger tap targets, calmer rhythm --- */
+.cpi-sidebar--clerk .cpi-nav-link.mantine-NavLink-root {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 550;
+  min-height: 2.75rem;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  align-items: center;
+}
+
+.cpi-store-welcome.mantine-Paper-root {
+  border-radius: var(--mantine-radius-md) !important;
+  overflow: hidden;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-store-welcome.mantine-Paper-root {
+  background: linear-gradient(
+      135deg,
+      rgba(122, 47, 77, 0.2) 0%,
+      rgba(8, 44, 97, 0.55) 45%,
+      rgba(196, 90, 46, 0.12) 100%
+    ),
+    var(--cpi-surface-raised) !important;
+  border: 1px solid rgba(255, 200, 180, 0.12) !important;
+  border-left: 4px solid var(--cpi-brand-plum) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* Clerk home: same KPI tile chrome; CTA row sits under copy */
+.cpi-dash-action-card-inner a.cpi-clerk-dash-btn {
+  margin-top: 0.35rem;
+}
+
+.mantine-Button-root:focus-visible,
+.mantine-ActionIcon-root:focus-visible,
+.mantine-NavLink-root:focus-visible,
+.mantine-TextInput-input:focus-visible,
+.mantine-PasswordInput-input:focus-visible,
+.mantine-Select-input:focus-visible {
+  outline: 2px solid var(--mantine-color-cpi-4);
+  outline-offset: 2px;
+}
+
+html[data-mantine-color-scheme="dark"] .mantine-Button-root:focus-visible,
+html[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root:focus-visible,
+html[data-mantine-color-scheme="dark"] .mantine-NavLink-root:focus-visible {
+  outline-color: rgba(130, 190, 255, 0.85);
+}
+
+.cpi-clerk-toolbar .mantine-Button-root {
+  min-height: 2.25rem;
+}
+
+a.cpi-clerk-dash-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem;
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--mantine-radius-md);
+  font-weight: 600;
+  font-size: var(--mantine-font-size-md);
+  line-height: 1.3;
+  min-height: 2.75rem;
+}
+
+a.cpi-clerk-dash-btn--primary {
+  border: 1px solid color-mix(in srgb, var(--cpi-brand-plum) 55%, var(--mantine-color-cpi-7));
+  background: linear-gradient(135deg, var(--mantine-color-cpi-6) 0%, #5a8fd4 48%, var(--cpi-brand-plum) 160%);
+  color: #fff !important;
+  box-shadow: 0 2px 12px rgba(8, 24, 56, 0.35);
+}
+
+/* Light scheme: keep label visible if gradient/mix fails in older browsers */
+html[data-mantine-color-scheme="light"] a.cpi-clerk-dash-btn--primary,
+[data-mantine-color-scheme="light"] a.cpi-clerk-dash-btn--primary {
+  color: #fff !important;
+  background: linear-gradient(135deg, #1a6ee8 0%, #3d7ec9 50%, #7a2f4d 130%);
+}
+
+a.cpi-clerk-dash-btn--secondary {
+  border: 1px solid var(--mantine-color-gray-4);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+}
+
+html[data-mantine-color-scheme="dark"] a.cpi-clerk-dash-btn--secondary {
+  border-color: rgba(74, 155, 255, 0.35);
+  background: rgba(8, 44, 97, 0.45);
+  color: #e8eaef;
+}
+
+a.cpi-clerk-dash-btn:focus-visible {
+  outline: 2px solid var(--mantine-color-cpi-4);
+  outline-offset: 2px;
+}
+
+html[data-mantine-color-scheme="dark"] a.cpi-clerk-dash-btn:focus-visible {
+  outline-color: rgba(130, 190, 255, 0.85);
+}
+
+/* --- Reports: demand analytics (sections 2–4) --- */
+.cpi-rep-analytics-card.mantine-Card-root {
+  border-top: 3px solid var(--mantine-color-cpi-6);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-analytics-card.mantine-Card-root {
+  border-top-color: var(--mantine-color-cpi-5);
+}
+
+.cpi-rep-chart-shell {
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-gray-3);
+  background: color-mix(in srgb, var(--mantine-color-gray-0), transparent 35%);
+  padding: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-chart-shell {
+  border-color: rgba(74, 155, 255, 0.18);
+  background: rgba(10, 12, 16, 0.45);
+}
+
+.cpi-rep-daily-toolbar {
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.cpi-rep-daily-stat-tile.mantine-Paper-root {
+  background: var(--mantine-color-body) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-stat-tile.mantine-Paper-root {
+  background: rgba(13, 16, 23, 0.78) !important;
+  border-color: rgba(74, 155, 255, 0.22) !important;
+}
+
+.cpi-rep-daily-scroll {
+  max-height: min(52vh, 440px);
+  overflow: auto;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-gray-3);
+  background: var(--mantine-color-body);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-scroll {
+  border-color: rgba(74, 155, 255, 0.2);
+  background: rgba(13, 16, 23, 0.65);
+}
+
+.cpi-rep-daily-scroll table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.cpi-rep-daily-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--mantine-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.65rem 0.85rem;
+  background: var(--mantine-color-gray-1);
+  color: var(--mantine-color-dark-6);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-scroll thead th {
+  background: #0a3268;
+  color: var(--mantine-color-dimmed);
+  border-bottom-color: rgba(130, 190, 255, 0.25);
+}
+
+.cpi-rep-daily-scroll tbody td {
+  padding: 0.55rem 0.85rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-scroll tbody td {
+  border-bottom-color: rgba(74, 155, 255, 0.1);
+}
+
+.cpi-rep-daily-scroll tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--mantine-color-gray-0), transparent 55%);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-scroll tbody tr:nth-child(even) td {
+  background: rgba(74, 155, 255, 0.04);
+}
+
+.cpi-rep-daily-scroll tbody tr:hover td {
+  background: color-mix(in srgb, var(--mantine-color-cpi-0), transparent 20%) !important;
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-daily-scroll tbody tr:hover td {
+  background: rgba(74, 155, 255, 0.08) !important;
+}
+
+.cpi-rep-col-date {
+  font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.cpi-rep-col-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.cpi-rep-col-rev {
+  font-weight: 500;
+  color: var(--mantine-color-cpi-7);
+}
+
+html[data-mantine-color-scheme="dark"] .cpi-rep-col-rev {
+  color: var(--mantine-color-cpi-4);
+}
+
+/* ==========================================================================
+   Landing page (/welcome)
+   --------------------------------------------------------------------------
+   Full-bleed marketing surface with its own color system so it feels distinct
+   from the logged-in app while still using the CapitalPay palette. Works in
+   both light and dark Mantine schemes.
+   ========================================================================== */
+
+.cpi-landing-root {
+  --cpi-ld-bg: radial-gradient(1200px 600px at 10% -10%, rgba(26, 110, 232, 0.28), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(122, 47, 77, 0.22), transparent 55%),
+    linear-gradient(180deg, #0b1220 0%, #0a1a33 40%, #0b1220 100%);
+  --cpi-ld-text: #e8eaef;
+  --cpi-ld-text-dim: #a8b8d0;
+  --cpi-ld-surface: rgba(255, 255, 255, 0.04);
+  --cpi-ld-surface-raised: rgba(255, 255, 255, 0.06);
+  --cpi-ld-border: rgba(130, 190, 255, 0.18);
+  --cpi-ld-border-strong: rgba(130, 190, 255, 0.32);
+  --cpi-ld-accent: #4a9bff;
+  --cpi-ld-accent-2: #1a6ee8;
+  --cpi-ld-accent-glow: rgba(74, 155, 255, 0.45);
+
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--cpi-ld-bg);
+  color: var(--cpi-ld-text);
+  overflow-x: hidden;
+  font-family: 'Times New Roman', Times, 'Noto Serif', 'Nimbus Roman',
+    'Noto Naskh Arabic', Georgia, serif;
+}
+
+/* Kill the app shell's page padding for this route. */
+.cpi-main-page-shell:has(.cpi-landing-root) {
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+/* --- Top nav --------------------------------------------------------------- */
+.cpi-landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  background: rgba(11, 18, 32, 0.55);
+  border-bottom: 1px solid var(--cpi-ld-border);
+  padding: 14px 28px;
+}
+
+.cpi-landing-brand {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cpi-ld-text);
+  line-height: 1.1;
+}
+
+.cpi-landing-brand-sub {
+  font-size: 0.72rem;
+  color: var(--cpi-ld-text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.cpi-landing-navlink {
+  color: var(--cpi-ld-text-dim) !important;
+  font-size: 0.9rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.cpi-landing-navlink:hover {
+  color: var(--cpi-ld-text) !important;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 48em) {
+  .cpi-landing-navlink--hide-sm {
+    display: none;
+  }
+  .cpi-landing-nav {
+    padding: 12px 16px;
+  }
+}
+
+/* --- Hero ----------------------------------------------------------------- */
+.cpi-landing-hero {
+  position: relative;
+  padding: clamp(56px, 9vw, 120px) 28px clamp(48px, 7vw, 96px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cpi-landing-hero-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.cpi-landing-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(130, 190, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 190, 255, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 35%, black 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 35%, black 25%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cpi-landing-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+  animation: cpi-landing-float 16s ease-in-out infinite;
+}
+
+.cpi-landing-hero-orb--a {
+  width: 480px;
+  height: 480px;
+  top: -120px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(74, 155, 255, 0.55), transparent 60%);
+}
+
+.cpi-landing-hero-orb--b {
+  width: 420px;
+  height: 420px;
+  top: 40%;
+  right: -120px;
+  background: radial-gradient(circle, rgba(122, 47, 77, 0.5), transparent 60%);
+  animation-delay: -8s;
+}
+
+@keyframes cpi-landing-float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -24px); }
+}
+
+.cpi-landing-eyebrow.mantine-Badge-root {
+  background: rgba(74, 155, 255, 0.12) !important;
+  color: #bfd8ff !important;
+  border: 1px solid rgba(74, 155, 255, 0.28);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+  padding: 8px 14px;
+  align-self: flex-start;
+}
+
+.cpi-landing-title.mantine-Title-root {
+  font-size: clamp(2.2rem, 4.6vw, 4rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--cpi-ld-text);
+  margin: 0;
+}
+
+.cpi-landing-title-accent {
+  background: linear-gradient(135deg, #6bb0ff 0%, #4a9bff 50%, #b85d7e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.cpi-landing-lead.mantine-Text-root {
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--cpi-ld-text-dim);
+  max-width: 560px;
+}
+
+.cpi-landing-cta-primary.mantine-Button-root {
+  padding: 0 26px;
+  height: 52px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 14px 30px -14px var(--cpi-ld-accent-glow),
+    0 0 0 1px rgba(130, 190, 255, 0.25) inset;
+}
+
+.cpi-landing-cta-primary.mantine-Button-root:hover {
+  box-shadow: 0 18px 36px -14px var(--cpi-ld-accent-glow),
+    0 0 0 1px rgba(130, 190, 255, 0.4) inset;
+}
+
+.cpi-landing-cta-ghost.mantine-Button-root {
+  height: 52px;
+  padding: 0 22px;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--cpi-ld-text) !important;
+  border: 1px solid var(--cpi-ld-border) !important;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.cpi-landing-cta-ghost.mantine-Button-root:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--cpi-ld-border-strong) !important;
+}
+
+.cpi-landing-cta-nav.mantine-Button-root {
+  padding: 0 18px;
+  font-weight: 600;
+  box-shadow: 0 10px 24px -12px var(--cpi-ld-accent-glow);
+}
+
+.cpi-landing-kpis {
+  margin-top: 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cpi-ld-border);
+}
+
+.cpi-landing-kpi {
+  min-width: 110px;
+}
+
+.cpi-landing-kpi-value.mantine-Text-root {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--cpi-ld-text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.cpi-landing-kpi-label.mantine-Text-root {
+  font-size: 0.78rem;
+  color: var(--cpi-ld-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* --- Hero visual ---------------------------------------------------------- */
+.cpi-landing-visual {
+  position: relative;
+  width: 100%;
+  min-height: 380px;
+  perspective: 1200px;
+}
+
+.cpi-landing-visual-card {
+  position: absolute;
+  border-radius: 18px;
+  border: 1px solid var(--cpi-ld-border);
+  background: linear-gradient(145deg, rgba(20, 36, 64, 0.92), rgba(11, 18, 32, 0.92));
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(130, 190, 255, 0.08) inset;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cpi-landing-visual-card--front {
+  top: 40px;
+  left: 32px;
+  right: 8px;
+  bottom: 0;
+  padding: 22px;
+  transform: rotate(-1.2deg);
+  z-index: 2;
+}
+
+.cpi-landing-visual-card--back {
+  top: 0;
+  left: 0;
+  right: 36px;
+  height: 72%;
+  padding: 22px;
+  transform: rotate(2deg);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.cpi-landing-visual-title.mantine-Text-root {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--cpi-ld-text);
+  letter-spacing: 0.01em;
+}
+
+.cpi-landing-visual-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(130, 190, 255, 0.1);
+}
+
+.cpi-landing-visual-row-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(74, 155, 255, 0.14);
+  color: var(--cpi-ld-accent);
+}
+
+.cpi-landing-visual-row-label.mantine-Text-root {
+  font-size: 0.82rem;
+  color: var(--cpi-ld-text-dim);
+}
+
+.cpi-landing-visual-row-value.mantine-Text-root {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--cpi-ld-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpi-landing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-right: 8px;
+}
+
+.cpi-chip--warn {
+  background: rgba(251, 146, 60, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+}
+
+.cpi-chip--ok {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border: 1px solid rgba(134, 239, 172, 0.28);
+}
+
+.cpi-landing-bar {
+  position: absolute;
+  bottom: 18px;
+  width: 14%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #4a9bff, #1a6ee8);
+  opacity: 0.9;
+  box-shadow: 0 10px 20px -8px var(--cpi-ld-accent-glow);
+}
+
+.cpi-landing-bar--1 { left: 10%; height: 38%; animation: cpi-bar-rise 900ms ease-out both; }
+.cpi-landing-bar--2 { left: 28%; height: 62%; background: linear-gradient(180deg, #6bb0ff, #4a9bff); animation: cpi-bar-rise 900ms 80ms ease-out both; }
+.cpi-landing-bar--3 { left: 46%; height: 48%; animation: cpi-bar-rise 900ms 160ms ease-out both; }
+.cpi-landing-bar--4 { left: 64%; height: 74%; background: linear-gradient(180deg, #b85d7e, #7a2f4d); animation: cpi-bar-rise 900ms 240ms ease-out both; }
+.cpi-landing-bar--5 { left: 82%; height: 54%; animation: cpi-bar-rise 900ms 320ms ease-out both; }
+
+@keyframes cpi-bar-rise {
+  from { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+  to { transform: scaleY(1); opacity: 0.9; }
+}
+
+@media (max-width: 62em) {
+  .cpi-landing-visual {
+    min-height: 320px;
+    margin-top: 32px;
+  }
+}
+
+/* --- Sections (features / how) ------------------------------------------- */
+.cpi-landing-section {
+  padding: clamp(64px, 8vw, 112px) 28px;
+  position: relative;
+}
+
+.cpi-landing-section--tinted {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.04));
+  border-top: 1px solid var(--cpi-ld-border);
+  border-bottom: 1px solid var(--cpi-ld-border);
+}
+
+.cpi-landing-section-head {
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+
+.cpi-landing-eyebrow-text.mantine-Text-root {
+  color: var(--cpi-ld-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cpi-landing-section-title.mantine-Title-root {
+  font-size: clamp(1.8rem, 3vw, 2.6rem) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em;
+  color: var(--cpi-ld-text);
+  margin: 0;
+  font-weight: 700;
+}
+
+.cpi-landing-section-sub.mantine-Text-root {
+  font-size: 1.05rem;
+  color: var(--cpi-ld-text-dim);
+  line-height: 1.55;
+  max-width: 640px;
+  margin-top: 8px;
+}
+
+/* --- Feature cards ------------------------------------------------------- */
+.cpi-landing-feature {
+  position: relative;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid var(--cpi-ld-border);
+  background: var(--cpi-ld-surface-raised);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
+  overflow: hidden;
+}
+
+.cpi-landing-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 120px at 0% 0%, rgba(74, 155, 255, 0.14), transparent 60%);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.cpi-landing-feature:hover {
+  transform: translateY(-4px);
+  border-color: var(--cpi-ld-border-strong);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 20px 48px -24px rgba(0, 0, 0, 0.5);
+}
+
+.cpi-landing-feature:hover::before {
+  opacity: 1;
+}
+
+.cpi-landing-feature-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(74, 155, 255, 0.18), rgba(26, 110, 232, 0.1));
+  color: var(--cpi-ld-accent);
+  border: 1px solid rgba(130, 190, 255, 0.22);
+  margin-bottom: 16px;
+}
+
+.cpi-landing-feature-title.mantine-Text-root {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cpi-ld-text);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.cpi-landing-feature-body.mantine-Text-root {
+  color: var(--cpi-ld-text-dim);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* --- Steps --------------------------------------------------------------- */
+.cpi-landing-step {
+  position: relative;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid var(--cpi-ld-border);
+  background: var(--cpi-ld-surface);
+  transition: transform 220ms ease, border-color 220ms ease;
+}
+
+.cpi-landing-step:hover {
+  transform: translateY(-3px);
+  border-color: var(--cpi-ld-border-strong);
+}
+
+.cpi-landing-step-num.mantine-Text-root {
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'SF Mono', 'Segoe UI Mono', monospace;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--cpi-ld-accent);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.cpi-landing-step-title.mantine-Text-root {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cpi-ld-text);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.cpi-landing-step-body.mantine-Text-root {
+  font-size: 0.95rem;
+  color: var(--cpi-ld-text-dim);
+  line-height: 1.55;
+}
+
+/* --- Bottom CTA strip ----------------------------------------------------- */
+.cpi-landing-cta-strip {
+  padding: clamp(56px, 8vw, 96px) 28px;
+  background: radial-gradient(800px 300px at 50% 0%, rgba(74, 155, 255, 0.25), transparent 70%),
+    linear-gradient(180deg, #0a1a33, #0b1220);
+  border-top: 1px solid var(--cpi-ld-border);
+}
+
+.cpi-landing-cta-title.mantine-Title-root {
+  font-size: clamp(1.8rem, 3vw, 2.4rem) !important;
+  color: var(--cpi-ld-text);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  margin: 0;
+  max-width: 640px;
+}
+
+.cpi-landing-cta-subtitle.mantine-Text-root {
+  font-size: 1.05rem;
+  color: var(--cpi-ld-text-dim);
+  max-width: 540px;
+}
+
+/* --- Footer --------------------------------------------------------------- */
+.cpi-landing-footer {
+  padding: 28px;
+  border-top: 1px solid var(--cpi-ld-border);
+  background: rgba(11, 18, 32, 0.6);
+}
+
+.cpi-landing-footer-copy.mantine-Text-root {
+  font-size: 0.85rem;
+  color: var(--cpi-ld-text-dim);
+}
+
+.cpi-landing-footer-link {
+  color: var(--cpi-ld-text-dim) !important;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.cpi-landing-footer-link:hover {
+  color: var(--cpi-ld-text) !important;
+}
+
+/* --- Entrance animation (respects reduced motion) ------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .cpi-landing-hero-inner,
+  .cpi-landing-section-head,
+  .cpi-landing-feature,
+  .cpi-landing-step {
+    animation: cpi-landing-fade-up 700ms ease both;
+  }
+  .cpi-landing-feature:nth-child(2) { animation-delay: 60ms; }
+  .cpi-landing-feature:nth-child(3) { animation-delay: 120ms; }
+  .cpi-landing-feature:nth-child(4) { animation-delay: 180ms; }
+  .cpi-landing-feature:nth-child(5) { animation-delay: 240ms; }
+  .cpi-landing-feature:nth-child(6) { animation-delay: 300ms; }
+  .cpi-landing-step:nth-child(2) { animation-delay: 100ms; }
+  .cpi-landing-step:nth-child(3) { animation-delay: 200ms; }
+}
+
+@keyframes cpi-landing-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- RTL bits ------------------------------------------------------------ */
+[dir="rtl"] .cpi-landing-title-accent {
+  display: inline-block;
+}
+
+[dir="rtl"] .cpi-landing-visual-card--front { transform: rotate(1.2deg); left: 8px; right: 32px; }
+[dir="rtl"] .cpi-landing-visual-card--back { transform: rotate(-2deg); left: 36px; right: 0; }
+
+/* --- Light theme tune — subtler but still dark hero for drama ------------ */
+html[data-mantine-color-scheme="light"] .cpi-landing-root {
+  /* Keep the landing hero dark for impact; it's a marketing surface. */
+}
+

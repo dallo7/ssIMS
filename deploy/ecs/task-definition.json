@@ -1,0 +1,63 @@
+{
+  "family": "cpi-inventory",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/cpiInventoryTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/cpi-inventory:latest",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8050, "protocol": "tcp", "name": "http" }
+      ],
+      "environment": [
+        { "name": "CPI_ENV", "value": "production" },
+        { "name": "CPI_BEHIND_PROXY", "value": "1" },
+        { "name": "CPI_SESSION_COOKIE_SECURE", "value": "1" },
+        { "name": "CPI_HOST", "value": "0.0.0.0" },
+        { "name": "CPI_PORT", "value": "8050" },
+        { "name": "CPI_PG_HOST", "value": "<RDS_ENDPOINT>" },
+        { "name": "CPI_PG_PORT", "value": "5432" },
+        { "name": "CPI_PG_DB",   "value": "ss_ims" },
+        { "name": "CPI_PG_USER", "value": "postgres" },
+        { "name": "CPI_PG_SSLMODE", "value": "require" },
+        { "name": "CPI_PG_CONNECT_TIMEOUT", "value": "10" },
+        { "name": "CPI_SEED_MODE", "value": "minimal" },
+        { "name": "CPI_ALERT_EVAL_ON_START", "value": "0" },
+        { "name": "CPI_ALERT_EVAL_INTERVAL_TICKS", "value": "60" }
+      ],
+      "secrets": [
+        { "name": "CPI_SECRET_KEY",  "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cpi/secret_key-XXXXXX" },
+        { "name": "CPI_PG_PASSWORD", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cpi/pg_password-XXXXXX" }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -fsS http://127.0.0.1:8050/api/v1/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cpi-inventory",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "app",
+          "awslogs-create-group": "true"
+        }
+      },
+      "ulimits": [
+        { "name": "nofile", "softLimit": 65536, "hardLimit": 65536 }
+      ],
+      "stopTimeout": 30
+    }
+  ]
+}
