@@ -16,7 +16,7 @@ from database.dal import (
     user_has_approval_pin,
 )
 from database.engine import db_session
-from components.branding import capital_pay_logo, powered_by_capitalpay
+from components.branding import capital_pay_logo
 from components.page import page_header
 from utils import i18n
 from utils.navigation import normalize_path
@@ -153,7 +153,6 @@ layout = dmc.Stack(
                     align="flex-start",
                     mb="xs",
                 ),
-                html.Div(powered_by_capitalpay("en"), style={"marginBottom": "0.5rem"}),
                 dmc.Text(
                     "HTTPS REST under /api/v1/ (same host as the app). Send header: Authorization: Bearer <token>. "
                     "Endpoints: GET /health, /items, /items/<id>, /stock-by-location; POST /sales-orders, /movements/issue.",

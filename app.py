@@ -22,7 +22,6 @@ from dash.exceptions import PreventUpdate
 from flask import session
 from dash_iconify import DashIconify
 
-from components.branding import powered_by_capitalpay
 from components.layout import sidebar
 from components.theme import merge_theme
 from database.dal import list_alerts_with_ack_state
@@ -175,11 +174,6 @@ app.layout = html.Div(
                                                             order=4,
                                                             fw=600,
                                                         ),
-                                                        html.Div(
-                                                            id="header-powered-by",
-                                                            children=powered_by_capitalpay("en"),
-                                                            style={"lineHeight": 1.3},
-                                                        ),
                                                         dmc.Text(
                                                             id="header-workspace",
                                                             children="",
@@ -286,7 +280,6 @@ def rbac_guard(pathname: str | None):
 
 @callback(
     Output("header-app-title", "children"),
-    Output("header-powered-by", "children"),
     Output("header-workspace", "children"),
     Output("btn-logout", "children"),
     Input("_pages_location", "pathname"),
@@ -296,10 +289,9 @@ def header_i18n(_pathname, loc):
     lang = i18n.normalize_lang(loc)
     u = current_user()
     if not u:
-        return dash.no_update, dash.no_update, "", dash.no_update
+        return dash.no_update, "", dash.no_update
     return (
         primary_app_name(),
-        powered_by_capitalpay(lang),
         i18n.workspace_label(u.get("role"), lang),
         i18n.t(lang, "logout"),
     )
