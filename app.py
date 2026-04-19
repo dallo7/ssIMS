@@ -156,6 +156,21 @@ app.layout = html.Div(
                         ),
                     ],
                 ),
+                dmc.Drawer(
+                    id="mobile-nav-drawer",
+                    opened=False,
+                    position="left",
+                    size=300,
+                    padding=0,
+                    withCloseButton=True,
+                    closeOnClickOutside=True,
+                    closeOnEscape=True,
+                    lockScroll=True,
+                    trapFocus=True,
+                    zIndex=2000,
+                    className="cpi-mobile-nav-drawer",
+                    children=html.Div(id="mobile-nav-drawer-inner"),
+                ),
                 dmc.Grid(
                     id="root-grid",
                     gutter=0,
@@ -208,22 +223,42 @@ app.layout = html.Div(
                                         },
                                         children=dmc.Group(
                                             [
-                                                dmc.Stack(
+                                                dmc.Group(
                                                     [
-                                                        dmc.Title(
-                                                            id="header-app-title",
-                                                            children=primary_app_name(),
-                                                            order=4,
-                                                            fw=600,
+                                                        dmc.ActionIcon(
+                                                            DashIconify(
+                                                                icon="tabler:menu-2",
+                                                                width=22,
+                                                            ),
+                                                            id="btn-mobile-menu",
+                                                            variant="subtle",
+                                                            color="gray",
+                                                            size="lg",
+                                                            className="cpi-mobile-menu-btn",
+                                                            n_clicks=0,
                                                         ),
-                                                        dmc.Text(
-                                                            id="header-workspace",
-                                                            children="",
-                                                            size="xs",
-                                                            c="dimmed",
+                                                        dmc.Stack(
+                                                            [
+                                                                dmc.Title(
+                                                                    id="header-app-title",
+                                                                    children=primary_app_name(),
+                                                                    order=4,
+                                                                    fw=600,
+                                                                ),
+                                                                dmc.Text(
+                                                                    id="header-workspace",
+                                                                    children="",
+                                                                    size="xs",
+                                                                    c="dimmed",
+                                                                ),
+                                                            ],
+                                                            gap=2,
+                                                            style={"flex": 1, "minWidth": 0},
                                                         ),
                                                     ],
-                                                    gap=2,
+                                                    gap="sm",
+                                                    align="center",
+                                                    wrap="nowrap",
                                                     style={"flex": 1, "minWidth": 0},
                                                 ),
                                                 dmc.Group(
@@ -412,6 +447,42 @@ def chrome_sidebar(pathname: str | None, alert_n: int | None, loc: dict | None):
     ac = int(alert_n or 0)
     lang = i18n.normalize_lang(loc)
     return sidebar(u, ac, current_path=pathname, lang=lang)
+
+
+# --- Mobile drawer (hamburger) -----------------------------------------------
+# On phones the in-grid sidebar is hidden via CSS; the user opens nav via the
+# burger button in the header. Drawer auto-closes when navigation completes,
+# so picking a NavLink takes the user to the page and dismisses the overlay.
+@callback(
+    Output("mobile-nav-drawer-inner", "children"),
+    Input("_pages_location", "pathname"),
+    Input("alert-badge-store", "data"),
+    Input("locale-store", "data"),
+)
+def fill_mobile_drawer(pathname: str | None, alert_n: int | None, loc: dict | None):
+    pathname = pathname or ""
+    u = current_user()
+    if "/login" in pathname or "/welcome" in pathname or not u:
+        return []
+    ac = int(alert_n or 0)
+    lang = i18n.normalize_lang(loc)
+    return sidebar(u, ac, current_path=pathname, lang=lang)
+
+
+@callback(
+    Output("mobile-nav-drawer", "opened"),
+    Input("btn-mobile-menu", "n_clicks"),
+    Input("_pages_location", "pathname"),
+    State("mobile-nav-drawer", "opened"),
+    prevent_initial_call=True,
+)
+def toggle_mobile_drawer(_n_clicks, _pathname, opened):
+    trigger = dash.callback_context.triggered_id
+    # Burger tap → flip current state.
+    if trigger == "btn-mobile-menu":
+        return not bool(opened)
+    # Path change (NavLink click, programmatic redirect) → always close.
+    return False
 
 
 @callback(
