@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go
@@ -13,6 +15,7 @@ from database.dal import (
     movement_timeseries,
     stock_by_category,
     top_movers,
+    unique_items_status_review,
 )
 from database.engine import db_session
 from components.page import page_header
@@ -47,6 +50,216 @@ def _kpi_card(icon: str, inner_id: str):
             gap="md",
             wrap="nowrap",
         ),
+    )
+
+
+_FLOW_STATUS_META: dict[str, dict[str, str]] = {
+    "OUT":  {"label": "Out of stock",  "color": "red",    "icon": "tabler:ban"},
+    "LOW":  {"label": "Low stock",     "color": "orange", "icon": "tabler:alert-triangle"},
+    "OVER": {"label": "Overstocked",   "color": "violet", "icon": "tabler:stack-2"},
+    "OK":   {"label": "In good shape", "color": "teal",   "icon": "tabler:check"},
+}
+
+
+def _flow_relative_time(dt: datetime | None) -> str:
+    """Compact, human-friendly age for the last-movement timestamp."""
+    if dt is None:
+        return "No movement"
+    delta = datetime.utcnow() - dt
+    secs = delta.total_seconds()
+    if secs < 60:
+        return "just now"
+    if secs < 3600:
+        return f"{int(secs // 60)}m ago"
+    if secs < 86400:
+        return f"{int(secs // 3600)}h ago"
+    if delta.days < 7:
+        return f"{delta.days}d ago"
+    return dt.strftime("%Y-%m-%d")
+
+
+def _flow_card(row: dict) -> dmc.Card:
+    """One card per unique SKU: status badge, on-hand vs reorder, in / out / net."""
+    status = row["status"]
+    meta = _FLOW_STATUS_META[status]
+    on = float(row["on_hand"] or 0)
+    rp = float(row["reorder_point"] or 0)
+    rq = float(row["reorder_quantity"] or 0)
+    received = float(row["received"] or 0)
+    issued = float(row["issued"] or 0)
+    net = float(row["net"] or 0)
+
+    # Progress: on-hand expressed as % of (reorder_point + 1.5 * reorder_qty),
+    # capped at 100. Items at "OK" / "OVER" naturally fill the bar; OUT / LOW
+    # leave it visibly short, reinforcing the colour-coded accent stripe.
+    cap = max(1.0, rp + (rq * 1.5)) if (rp or rq) else max(1.0, on, 1.0)
+    pct = max(0.0, min(100.0, (on / cap) * 100.0))
+
+    last_dt = row.get("last_movement_at")
+    last_iso = last_dt.strftime("%Y-%m-%d %H:%M") if last_dt else "No movement in window"
+
+    name_label = row.get("name") or "—"
+    sub_label = row.get("sku") or row.get("item_id") or ""
+
+    net_color = "#15803d" if net >= 0 else "#b91c1c"
+
+    return dmc.Card(
+        withBorder=True,
+        radius="md",
+        padding="md",
+        className=f"cpi-item-flow-card cpi-item-flow-card--{status.lower()}",
+        children=[
+            dmc.Group(
+                [
+                    dmc.Stack(
+                        [
+                            dmc.Text(
+                                name_label,
+                                fw=600,
+                                size="sm",
+                                lineClamp=1,
+                                className="cpi-item-flow-card-name",
+                            ),
+                            dmc.Text(sub_label, size="xs", c="dimmed"),
+                        ],
+                        gap=2,
+                        style={"flex": 1, "minWidth": 0},
+                    ),
+                    dmc.Badge(
+                        meta["label"],
+                        color=meta["color"],
+                        variant="light",
+                        leftSection=DashIconify(icon=meta["icon"], width=12),
+                        size="sm",
+                        radius="sm",
+                    ),
+                ],
+                justify="space-between",
+                align="flex-start",
+                wrap="nowrap",
+            ),
+            dmc.Stack(
+                [
+                    dmc.Group(
+                        [
+                            dmc.Text("On hand", size="xs", c="dimmed"),
+                            dmc.Text(
+                                f"{on:,.0f}",
+                                fw=700,
+                                size="md",
+                                className="cpi-item-flow-card-onhand",
+                            ),
+                        ],
+                        justify="space-between",
+                        wrap="nowrap",
+                    ),
+                    dmc.Progress(
+                        value=pct,
+                        color=meta["color"],
+                        size="sm",
+                        radius="xl",
+                        className="cpi-item-flow-progress",
+                    ),
+                    dmc.Group(
+                        [
+                            dmc.Text(f"Reorder at {rp:,.0f}", size="xs", c="dimmed"),
+                            dmc.Tooltip(
+                                label=last_iso,
+                                position="top",
+                                withArrow=True,
+                                children=dmc.Text(
+                                    _flow_relative_time(last_dt),
+                                    size="xs",
+                                    c="dimmed",
+                                ),
+                            ),
+                        ],
+                        justify="space-between",
+                        wrap="nowrap",
+                    ),
+                ],
+                gap=6,
+                mt="sm",
+            ),
+            dmc.Divider(my="sm"),
+            dmc.SimpleGrid(
+                cols=3,
+                spacing="xs",
+                className="cpi-item-flow-flowgrid",
+                children=[
+                    dmc.Stack(
+                        [
+                            dmc.Group(
+                                [
+                                    DashIconify(
+                                        icon="tabler:arrow-down-right",
+                                        width=14,
+                                        color="#15803d",
+                                    ),
+                                    dmc.Text("In", size="xs", c="dimmed"),
+                                ],
+                                gap=4,
+                                wrap="nowrap",
+                            ),
+                            dmc.Text(
+                                f"{received:,.0f}",
+                                fw=600,
+                                size="sm",
+                                className="cpi-item-flow-in",
+                            ),
+                        ],
+                        gap=2,
+                    ),
+                    dmc.Stack(
+                        [
+                            dmc.Group(
+                                [
+                                    DashIconify(
+                                        icon="tabler:arrow-up-right",
+                                        width=14,
+                                        color="#b91c1c",
+                                    ),
+                                    dmc.Text("Out", size="xs", c="dimmed"),
+                                ],
+                                gap=4,
+                                wrap="nowrap",
+                            ),
+                            dmc.Text(
+                                f"{issued:,.0f}",
+                                fw=600,
+                                size="sm",
+                                className="cpi-item-flow-out",
+                            ),
+                        ],
+                        gap=2,
+                    ),
+                    dmc.Stack(
+                        [
+                            dmc.Group(
+                                [
+                                    DashIconify(
+                                        icon="tabler:arrows-exchange",
+                                        width=14,
+                                        color="#1e3a8a",
+                                    ),
+                                    dmc.Text("Net", size="xs", c="dimmed"),
+                                ],
+                                gap=4,
+                                wrap="nowrap",
+                            ),
+                            dmc.Text(
+                                f"{net:+,.0f}",
+                                fw=600,
+                                size="sm",
+                                style={"color": net_color},
+                                className="cpi-item-flow-net",
+                            ),
+                        ],
+                        gap=2,
+                    ),
+                ],
+            ),
+        ],
     )
 
 
@@ -180,6 +393,84 @@ layout = dmc.Stack(
                         dmc.Title("Operational alerts", order=4, mb="md", fw=600),
                         html.Div(id="dash-alerts-panel"),
                     ],
+                ),
+            ],
+        ),
+        # ----------------------------------------------------------------------
+        # Unique items — stock flow review.
+        # Lives OUTSIDE the role-gated analytics / clerk blocks so every signed-in
+        # user (including stock clerks) sees a card per active SKU.
+        # ----------------------------------------------------------------------
+        dmc.Card(
+            withBorder=True,
+            padding="lg",
+            radius="md",
+            className="cpi-item-flow-shell",
+            children=[
+                dmc.Group(
+                    [
+                        dmc.Stack(
+                            [
+                                dmc.Title(
+                                    "Unique items — stock flow review",
+                                    order=4,
+                                    fw=600,
+                                ),
+                                dmc.Text(
+                                    "One card per active product. Status reflects current "
+                                    "on-hand vs the reorder point; In / Out / Net summarise "
+                                    "stock movement over the selected window.",
+                                    size="sm",
+                                    c="dimmed",
+                                ),
+                            ],
+                            gap=2,
+                            style={"flex": 1, "minWidth": 0},
+                        ),
+                        dmc.SegmentedControl(
+                            id="dash-flow-window",
+                            data=[
+                                {"label": "7d", "value": "7"},
+                                {"label": "30d", "value": "30"},
+                                {"label": "90d", "value": "90"},
+                            ],
+                            value="30",
+                            size="xs",
+                        ),
+                    ],
+                    justify="space-between",
+                    align="flex-start",
+                    wrap="wrap",
+                    gap="md",
+                ),
+                dmc.Group(
+                    [
+                        dmc.TextInput(
+                            id="dash-flow-search",
+                            placeholder="Filter by name or SKU…",
+                            leftSection=DashIconify(icon="tabler:search", width=16),
+                            size="sm",
+                            radius="md",
+                            className="cpi-item-flow-search",
+                            style={"flex": 1, "minWidth": "200px", "maxWidth": "420px"},
+                        ),
+                        dmc.Text(
+                            id="dash-flow-summary",
+                            size="xs",
+                            c="dimmed",
+                            children="",
+                        ),
+                    ],
+                    justify="space-between",
+                    align="center",
+                    wrap="wrap",
+                    gap="sm",
+                    mt="md",
+                ),
+                html.Div(
+                    id="dash-item-flow-grid",
+                    className="cpi-item-flow-grid-wrap",
+                    style={"marginTop": "var(--mantine-spacing-md)"},
                 ),
             ],
         ),
@@ -459,3 +750,76 @@ def refresh_dashboard(_start_date, _end_date, window, _pathname, theme_data):
         fig_s,
         alert_children,
     )
+
+
+@callback(
+    Output("dash-item-flow-grid", "children"),
+    Output("dash-flow-summary", "children"),
+    Input("dash-flow-window", "value"),
+    Input("dash-flow-search", "value"),
+    Input("_pages_location", "pathname"),
+)
+def refresh_item_flow(window, search, pathname):
+    """Render one card per unique active product, for every signed-in user."""
+    from utils.navigation import normalize_path
+
+    if normalize_path(pathname) != "/":
+        raise PreventUpdate
+    if not session.get("user_id"):
+        raise PreventUpdate
+    try:
+        days = max(1, min(int(window or 30), 365))
+    except (TypeError, ValueError):
+        days = 30
+
+    with db_session() as s:
+        # limit=None → return every active SKU. The search filter below trims
+        # the visible grid client-side via Python without hitting the DB again.
+        rows = unique_items_status_review(s, days=days, limit=None)
+
+    total = len(rows)
+    needle = (search or "").strip().lower()
+    if needle:
+        def _matches(r: dict) -> bool:
+            return (
+                needle in (r.get("name") or "").lower()
+                or needle in (r.get("sku") or "").lower()
+                or needle in (r.get("item_id") or "").lower()
+            )
+        rows = [r for r in rows if _matches(r)]
+
+    shown = len(rows)
+
+    if total == 0:
+        return (
+            dmc.Text(
+                "No active products to review yet. Add an item under Inventory.",
+                c="dimmed",
+                ta="center",
+                py="md",
+            ),
+            "",
+        )
+    if shown == 0:
+        summary = f"No matches — {total:,} product{'s' if total != 1 else ''} in catalogue."
+        return (
+            dmc.Text(
+                f"No products match \u201c{search}\u201d.",
+                c="dimmed",
+                ta="center",
+                py="md",
+            ),
+            summary,
+        )
+
+    if needle:
+        summary = f"Showing {shown:,} of {total:,} products · last {days}d"
+    else:
+        summary = f"Showing all {total:,} products · last {days}d"
+
+    grid = dmc.SimpleGrid(
+        cols={"base": 1, "sm": 2, "md": 3, "xl": 4},
+        spacing="md",
+        children=[_flow_card(r) for r in rows],
+    )
+    return grid, summary

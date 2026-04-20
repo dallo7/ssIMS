@@ -946,6 +946,111 @@ html[data-mantine-color-scheme="dark"] .mantine-Popover-dropdown {
 }
 
 /* ============================================================================
+   Unique items — stock flow review (dashboard cards)
+   One card per active SKU. Status drives the accent stripe + badge colour.
+   ============================================================================ */
+.cpi-item-flow-shell {
+  background: var(--mantine-color-body);
+}
+
+.cpi-item-flow-grid-wrap {
+  width: 100%;
+}
+
+.cpi-item-flow-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--mantine-color-body);
+  border-color: var(--mantine-color-gray-3) !important;
+  transition:
+    transform 140ms ease,
+    box-shadow 160ms ease,
+    border-color 140ms ease;
+}
+
+.cpi-item-flow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -18px rgba(15, 23, 42, 0.22);
+  border-color: var(--mantine-color-cpi-3, #C8DBFA) !important;
+}
+
+/* Top accent stripe — colour matches the status badge for an at-a-glance read. */
+.cpi-item-flow-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--mantine-color-cpi-6, #155AC0);
+}
+.cpi-item-flow-card--out::before  { background: var(--mantine-color-red-6, #e03131); }
+.cpi-item-flow-card--low::before  { background: var(--mantine-color-orange-5, #fd7e14); }
+.cpi-item-flow-card--over::before { background: var(--mantine-color-violet-5, #845ef7); }
+.cpi-item-flow-card--ok::before   { background: var(--mantine-color-teal-5, #20c997); }
+
+/* Subtle tinted background for critical states so they stand out in the grid. */
+.cpi-item-flow-card--out {
+  background: linear-gradient(180deg, rgba(224, 49, 49, 0.045) 0%, var(--mantine-color-body) 60%);
+}
+.cpi-item-flow-card--low {
+  background: linear-gradient(180deg, rgba(253, 126, 20, 0.05) 0%, var(--mantine-color-body) 60%);
+}
+
+.cpi-item-flow-card-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.cpi-item-flow-card-onhand,
+.cpi-item-flow-in,
+.cpi-item-flow-out,
+.cpi-item-flow-net {
+  font-variant-numeric: tabular-nums;
+}
+
+.cpi-item-flow-progress .mantine-Progress-bar {
+  transition: width 320ms ease;
+}
+
+.cpi-item-flow-flowgrid {
+  border-top: 1px solid var(--cpi-chrome-border, var(--mantine-color-gray-2));
+  padding-top: 8px;
+}
+
+/* Dark mode tuning. */
+html[data-mantine-color-scheme="dark"] .cpi-item-flow-card {
+  background: var(--cpi-surface-raised, rgba(255, 255, 255, 0.025)) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-mantine-color-scheme="dark"] .cpi-item-flow-card:hover {
+  border-color: rgba(74, 155, 255, 0.45) !important;
+  box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.55);
+}
+html[data-mantine-color-scheme="dark"] .cpi-item-flow-card--out {
+  background: linear-gradient(180deg, rgba(224, 49, 49, 0.10) 0%, rgba(255, 255, 255, 0.025) 60%) !important;
+}
+html[data-mantine-color-scheme="dark"] .cpi-item-flow-card--low {
+  background: linear-gradient(180deg, rgba(253, 126, 20, 0.10) 0%, rgba(255, 255, 255, 0.025) 60%) !important;
+}
+html[data-mantine-color-scheme="dark"] .cpi-item-flow-flowgrid {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* On phones the grid auto-wraps to 1 col via SimpleGrid base; tighten padding
+   so each card uses screen real estate well. */
+@media (max-width: 480px) {
+  .cpi-item-flow-card {
+    padding: 12px !important;
+  }
+  .cpi-item-flow-card-name {
+    font-size: 0.95rem;
+  }
+}
+
+/* ============================================================================
    Mobile chrome — hide the desktop sidebar, drive nav via the drawer.
    The desktop layout (>= 769px) is intentionally left untouched.
    ============================================================================ */

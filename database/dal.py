@@ -1016,6 +1016,98 @@ def top_movers(session: Session, days: int, top_n: int = 10) -> tuple[list[dict]
     return rows(fast_ids), rows(slow_ids)
 
 
+def unique_items_status_review(
+    session: Session,
+    days: int = 30,
+    limit: int | None = None,
+) -> list[dict]:
+    """Per-SKU snapshot: current status + in / out / net flow over a window.
+
+    Returns one dict per active inventory item with:
+        id, item_id, sku, name, on_hand, reorder_point, reorder_quantity,
+        status ('OUT' | 'LOW' | 'OVER' | 'OK'), received, issued, net,
+        last_movement_at, activity (received + issued).
+
+    Rows are ranked so the most-relevant items surface first:
+        1. severity (OUT, then LOW, then OVER, then OK)
+        2. recent activity (descending)
+        3. name (alphabetical)
+    Pass ``limit=None`` (default) to return every active SKU; pass an int to
+    cap the response.
+    """
+    from collections import defaultdict
+
+    since = datetime.utcnow() - timedelta(days=days)
+    items = list(
+        session.scalars(
+            select(models.InventoryItem).where(models.InventoryItem.is_active == True)  # noqa: E712
+        ).all()
+    )
+    if not items:
+        return []
+    items_by_pk = {it.id: it for it in items}
+
+    rec: dict[int, float] = defaultdict(float)
+    iss: dict[int, float] = defaultdict(float)
+    last_at: dict[int, datetime | None] = {}
+    for t in session.scalars(
+        select(models.StockTransaction).where(models.StockTransaction.timestamp >= since)
+    ).all():
+        pk = t.item_id
+        if pk not in items_by_pk:
+            continue
+        if t.type == models.TransactionType.RECEIVE.value:
+            rec[pk] += abs(float(t.quantity or 0))
+        elif t.type == models.TransactionType.ISSUE.value:
+            iss[pk] += abs(float(t.quantity or 0))
+        prev = last_at.get(pk)
+        if prev is None or t.timestamp > prev:
+            last_at[pk] = t.timestamp
+
+    rows: list[dict] = []
+    for it in items:
+        on = float(it.quantity_in_stock or 0)
+        rp = float(it.reorder_point or 0)
+        rq = float(it.reorder_quantity or 0)
+        if on <= 0:
+            status = "OUT"
+        elif on <= rp:
+            status = "LOW"
+        elif rq and on >= (rp + rq) * 1.5:
+            status = "OVER"
+        else:
+            status = "OK"
+        received = rec.get(it.id, 0.0)
+        issued = iss.get(it.id, 0.0)
+        rows.append(
+            {
+                "id": it.id,
+                "item_id": it.item_id,
+                "sku": it.sku or "",
+                "name": it.name,
+                "on_hand": on,
+                "reorder_point": rp,
+                "reorder_quantity": rq,
+                "status": status,
+                "received": received,
+                "issued": issued,
+                "net": received - issued,
+                "last_movement_at": last_at.get(it.id),
+                "activity": received + issued,
+            }
+        )
+
+    sev_order = {"OUT": 0, "LOW": 1, "OVER": 2, "OK": 3}
+    rows.sort(key=lambda r: (sev_order[r["status"]], -r["activity"], r["name"].lower()))
+    if limit is None:
+        return rows
+    try:
+        n = max(1, int(limit))
+    except (TypeError, ValueError):
+        return rows
+    return rows[:n]
+
+
 def movement_summary(session: Session, since: datetime, until: datetime) -> dict[str, float]:
     txns = session.scalars(
         select(models.StockTransaction).where(
